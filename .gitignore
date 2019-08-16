@@ -1,0 +1,8 @@
+.env/
+.vscode/
+archives/
+data/
+downloads/
+games/
+viewer/
+src/__pycache__
