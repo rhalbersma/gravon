@@ -23,15 +23,15 @@ def xml2tuple(path):
     result_type, winner = result.attrib['type'], result.attrib['winner']
     return (game_id, game_type, field_content, game_length, name1, name2, result_type, winner)
 
-def main(argv):
+def main(args):
     data = []
-    xml_files = (a for a in argv[1:] if a.endswith('.xml'))
+    xml_files = (a for a in args[1:] if a.endswith('.xml'))
     for a in xml_files:
         data.append(xml2tuple(a))
     df = pd.DataFrame(data, columns=['game_id', 'game_type', 'field_content', 'game_length', 'name1', 'name2', 'result_type', 'winner'])
     empty = df.query('field_content.str.len() != 100')
     df.query('field_content.str.len() == 100', inplace=True)
-    df.to_csv(argv[0], index=False)
+    df.to_csv(args[0], index=False)
     if empty.shape[0]:
         root, ext = os.path.splitext(argv[0])
         empty.to_csv(root + '-empty' + ext, index=False)

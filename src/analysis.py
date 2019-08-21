@@ -24,14 +24,14 @@ np.set_printoptions(formatter={'float': '{: 0.3f}'.format})
 dfR = df.query('side_X == "L" & side_9 == "L"')
 
 matches = pattern.match(df, """
-28........
+BB......BB
 ..........
 ..........
 ..........
 """)[0]
 
 setups = [ s.pieces for s in matches['setup'] ]
-pieces = strados2.Encode().pieces
+pieces = stratego.Setup.pieces
 
 num_setups = len(setups)
 placements = { p : sum(s == p for s in setups) for p in pieces }

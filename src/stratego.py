@@ -5,34 +5,41 @@
 
 import numpy as np
 
-import strados2
-
 class Setup:
     W, H = 10, 4
 
-    def __init__(self, s: str, game_type: str='classic', encoding=strados2.Encode()):
-        assert len(s) == self.W * self.H
-        self.pieces = np.array([ c for c in s ]).reshape(self.H, self.W)
-        assert s == self.strados2()
-        self.piece_count = dict(zip(*np.unique(self.pieces, return_counts=True)))
-        if game_type == 'classic':
-            assert self.piece_count == dict(zip(encoding.pieces, encoding.classic))
-        elif game_type == 'barrage':
-            assert self.piece_count == dict(zip(encoding.pieces, encoding.barrage))
+    pieces = [ 'F' ] + [ str(i) for i in range(1, 10) ] + [ 'X', 'B' ]
+
+    ranks = { piece : rank for rank, piece in enumerate(pieces) }
+
+    counts = {
+        'classic' : [ 1, 1, 8, 5, 4, 4, 4, 3, 2, 1, 1, 6 ],
+        'barrage' : [ 1, 1, 2, 1, 0, 0, 0, 0, 0, 1, 1, 1 ]
+    }
+
+    def __init__(self, setup: str, game_type: str='classic'):
+        assert len(setup) == self.W * self.H
+        self.board = np.array([ piece for piece in setup ]).reshape(self.H, self.W)
+        self.game_type = game_type
+        assert setup == str(self)
+        assert self.is_legal()
+
+    def is_legal(self) -> bool:
+        return dict(zip(*np.unique(self.board, return_counts=True))) == dict(zip(self.pieces, self.counts[self.game_type]))
 
     def __str__(self) -> str:
-        return np.array2string(np.flip(self.pieces, axis=0))
+        return ''.join(self.board.flatten())
 
-    def strados2(self) -> str:
-        return ''.join(self.pieces.flatten())
+    def diagram(self) -> str:
+        return np.array2string(np.flip(self.board, axis=0))
 
     def side(self, unique_piece: str='F') -> str:
-        column = np.where(self.pieces == unique_piece)[1]
+        column = np.where(self.board == unique_piece)[1]
         assert len(column) == 1
         return 'L' if column in range(self.W // 2) else 'R'
 
     def mirror(self):
-        self.pieces = np.flip(self.pieces, axis=1)
+        self.board = np.flip(self.board, axis=1)
         return self
 
     def canonical(self, dst_side: str='L', unique_piece: str='F'):
@@ -40,12 +47,12 @@ class Setup:
         return (self, True) if dst_side == src_side else (self.mirror(), False)
 
     def square(self, sq: str):
-        f = ord(sq[0]) - ord('a')
-        r = int(sq[1]) - 1
-        return self.pieces[r, f]
+        col = ord(sq[0]) - ord('a')
+        row = int(sq[1]) - 1
+        return self.board[row, col]
 
     def rdist(self, p: str) -> str:
-        return ''.join([str(i) for i in np.sum(self.pieces == p, axis=1)])
+        return ''.join([str(i) for i in np.sum(self.board == p, axis=1)])
 
     def cdist(self, p: str) -> str:
-        return ''.join([str(i) for i in np.sum(self.pieces == p, axis=0)])
+        return ''.join([str(i) for i in np.sum(self.board == p, axis=0)])

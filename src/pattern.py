@@ -4,18 +4,14 @@
 #          http://www.boost.org/LICENSE_1_0.txt)
 
 import pandas as pd
-import stratego
 
-def equals(df: pd.DataFrame, s: str):
-    return df.query('strados2 == @s'), s
+def board2string(pat2d: str) -> str:
+    return ''.join(reversed(pat.splitlines()))
 
-def match(df: pd.DataFrame, pat: str):
-    return df.query('strados2.str.match(@pat)'), pat
+def equal(df: pd.DataFrame, pat2d: str, var: str='string') -> pd.DataFrame:
+    pat = board2string(pat2d)
+    return df.query(var + ' == @pat')
 
-def board2string(p: str) -> str:
-    return ''.join(reversed(p.splitlines()[1:]))
-
-def position(df: pd.DataFrame, p: str):
-    s = board2string(p)
-    s = stratego.Setup(s).canonical().strados2()
-    return equals(df, s)
+def match(df: pd.DataFrame, pat2d: str, var: str='string') -> pd.DataFrame:
+    pat = board2string(pat2d)
+    return df.query(var + '.str.match(@pat)')
