@@ -33,7 +33,7 @@ def main(args):
     df.query('field_content.str.len() == 100', inplace=True)
     df.to_csv(args[0], index=False)
     if empty.shape[0]:
-        root, ext = os.path.splitext(argv[0])
+        root, ext = os.path.splitext(args[0])
         empty.to_csv(root + '-empty' + ext, index=False)
     pass
 

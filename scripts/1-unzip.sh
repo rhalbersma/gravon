@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# unpack all .zip files into a games directory
+# unpack all .zip files into a "games" directory
 unzip -qq "downloads/*.zip" -d games
 
 # flatten games directory and remove nested directories

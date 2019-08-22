@@ -20,6 +20,7 @@ class Setup:
     def __init__(self, setup: str, game_type: str='classic'):
         assert len(setup) == self.W * self.H
         self.board = np.array([ piece for piece in setup ]).reshape(self.H, self.W)
+        self.tensor = np.array([ self.board == piece for piece in self.pieces ]).astype(int)
         self.game_type = game_type
         assert setup == str(self)
         assert self.is_legal()

@@ -9,13 +9,16 @@ class SetupParser:
     pieces_R = ['M'] + [ chr(i) for i in range(ord('B') + 1, ord('M')) ] + ['B']
     pieces_B = ['Y'] + [ chr(i) for i in range(ord('N') + 1, ord('Y')) ] + ['N']
 
-    def __init__(self, encoding: list):
+    def __init__(self, encoding: list) -> None:
         self.decode = {
             **{ self.pieces_R[rank] : piece for rank, piece in enumerate(encoding) },
             **{ self.pieces_B[rank] : piece for rank, piece in enumerate(encoding) }
         }
 
-    def __call__(self, setup: str, player: str) -> str:
-        if player == 'B':
-            setup = setup[::-1]
-        return ''.join([self.decode[piece] for piece in setup])
+    def __call__(self, field_content: str) -> (str, str):
+        setup_R = self.parse(field_content[:40]      )
+        setup_B = self.parse(field_content[60:][::-1])
+        return setup_R, setup_B
+
+    def parse(self, setup: str) -> str:
+        return ''.join([ self.decode[piece] for piece in setup ])

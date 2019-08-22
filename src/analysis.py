@@ -17,9 +17,11 @@ import strados2
 import stratego
 import tidy
 
-df = tidy.setups_from_games("../data/classic.csv")
+games = pd.read_csv("../data/classic.csv")
+setups = tidy.setups(games.copy())
 
 np.set_printoptions(formatter={'float': '{: 0.3f}'.format})
+np.set_printoptions(linewidth=100)
 
 dfR = df.query('side_X == "L" & side_9 == "L"')
 
