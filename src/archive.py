@@ -7,7 +7,7 @@ import os
 import shutil
 
 def make(files, id: str, games_dir: str='../games/', archive_root: str='../archives/'):
-    archive_dir = archive_root + 'arch-' + id
+    archive_dir = archive_root + id
     if not os.path.exists(archive_dir):
         os.mkdir(archive_dir)
     for f in files['game_id']:
