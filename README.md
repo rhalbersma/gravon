@@ -1,5 +1,5 @@
-Statistical analysis of the Gravon archive of Stratego games
-============================================================
+Analyzing the Gravon archive of Stratego games
+==============================================
 
 [![Language](https://img.shields.io/badge/language-Python-blue.svg)](https://www.python.org/)
 [![Standard](https://img.shields.io/badge/Python-3.6-blue.svg)](https://en.wikipedia.org/wiki/History_of_Python)
@@ -9,7 +9,7 @@ Statistical analysis of the Gravon archive of Stratego games
 Acknowledgements
 ----------------
 
-Thanks to stratego.com user Dobby125 for his pioneering efforts in analyzing the Gravon archive of Stratego games.
+This repository was inspired by a series of [forum](http://forum.stratego.com/topic/4470-top-20-common-game-setups-at-gravon-site/) and [blog](https://stratego-tips.blogspot.com/) posts by [stratego.com](http://www.stratego.com/) user [Dobby125](http://forum.stratego.com/user/873-dobby125/).
 
 License
 -------

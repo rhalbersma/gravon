@@ -32,6 +32,9 @@ setups['dist_91'].agg('mean')
 setups['dist_X1'].agg('mean')
 setups['dist_X9'].agg('mean')
 
+setups.groupby('dist_XF').agg(['count', 'mean'])['score']
+setups.groupby('dist_91').agg(['count', 'mean'])['score']
+
 # http://forum.stratego.com/topic/4470-top-20-common-game-setups-at-gravon-site/?p=66753
 unique_pieces = [ 'X', '9', '1', 'F' ]
 unique_ranks = [ stratego.Setup.ranks[piece] for piece in unique_pieces ]
