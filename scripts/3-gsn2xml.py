@@ -5,6 +5,7 @@
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
 
+import glob
 import os
 import sys
 
@@ -71,12 +72,10 @@ def gsn2xml(path):
         print(' </game>', file=dst)
         print('</stratego>', file=dst)
 
-def main(args):
-    gsn_files = (a for a in args if a.endswith('.gsn'))
-    for a in gsn_files:
-        gsn2xml(a)
-        os.remove(a)
-    pass
+def main():
+    for src in glob.glob('games/*.gsn'):
+        gsn2xml(src)
+        os.remove(src)
 
 if __name__== '__main__':
-    main(sys.argv[1:])
+    sys.exit(main())
