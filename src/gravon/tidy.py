@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 #          Copyright Rein Halbersma 2018-2019.
 # Distributed under the Boost Software License, Version 1.0.
 #    (See accompanying file LICENSE_1_0.txt or copy at
@@ -7,8 +5,8 @@
 
 import pandas as pd
 
-import strados2
-import stratego
+from . import strados2
+from . import stratego
 
 def setups(df: pd.DataFrame) -> pd.DataFrame:
     # parse the 100-char board string into red and blue setups

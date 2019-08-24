@@ -32,7 +32,7 @@ def gsn2xml(path):
         assert line.startswith('type')
         type = int(line[-1])
         assert type in range(4)
-        print(' <game type = "%s">' % game_type(type), file=dst)
+        print(' <game type = "{}">'.format(game_type(type)), file=dst)
         print(file=dst)
 
         # field content
@@ -43,7 +43,7 @@ def gsn2xml(path):
             src.seek(last_line)
         else:
             assert len(line) == 100
-            print('  <field content="%s"/>' % line, file=dst)
+            print('  <field content="{}"/>'.format(line), file=dst)
 
         # moves
         id = 0
@@ -57,16 +57,16 @@ def gsn2xml(path):
                 continue
             id += 1
             source, target = line.split('-')
-            print('  <move id="%d" source="%s" target="%s"/>' % (id, source, target), file=dst)
+            print('  <move id="{}" source="{}" target="{}"/>'.format(id, source, target), file=dst)
 
         # result
         line = src.readline().strip()
         players, result = line.split(' result ')
         player1, player2 = players.split(' vs ')
         type, winner = result.split(' winner ')
-        print('  <player id ="1">%s</player>' % player1, file=dst)
-        print('  <player id ="2">%s</player>' % player2, file=dst)
-        print('  <result type="%s" winner="%d"/>' % (type, int(winner) + 1), file=dst)
+        print('  <player id ="1">{}</player>'.format(player1), file=dst)
+        print('  <player id ="2">{}</player>'.format(player2), file=dst)
+        print('  <result type="{}" winner="{}"/>'.format(type, int(winner) + 1), file=dst)
 
         # header closing
         print(' </game>', file=dst)
