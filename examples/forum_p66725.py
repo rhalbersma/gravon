@@ -18,7 +18,7 @@ for i, piece in enumerate(tidy.unique_pieces):
         if i < j:
             print('Distance between {} and {} in the starting setup: {}'.format(piece, other, setups['dist_' + piece + other].agg('mean')))
 
-# More detailed analysis
+# Unpublished analysis
 setups = tidy.add_WLD_score(setups)
 
 for i, piece in enumerate(tidy.unique_pieces):

@@ -18,7 +18,7 @@ count, probs = pd.Series(setups['board']).apply(lambda x: x.tensor).agg(['sum', 
 np.set_printoptions(formatter={'float': '{:6.2f}'.format}, linewidth=120)
 
 piece_counts = np.array(stratego.Setup.counts['classic'])
-random_piece_probs =  piece_counts / 40
+random_piece_probs = piece_counts / 40
 random_piece_entropy = 40 * (-random_piece_probs * np.log2(random_piece_probs))
 random_entropy = np.sum(random_piece_entropy)
 gravon_square_entropy = np.sum(-probs * np.log2(probs), axis=0)
@@ -36,7 +36,7 @@ print('{}\n'.format(delta_piece_entropy / piece_counts))
 print('{}\n'.format(np.flip(gravon_square_entropy, axis=1)))
 np.set_printoptions()
 
-# More detailed analysis
+# Unpublished analysis
 gravon_LogL = -gravon_entropy
 setups['LogL'] = setups['board'].apply(lambda x: np.sum(x.tensor * np.log2(probs)))
 setups['surprise'] = gravon_LogL - setups['LogL']

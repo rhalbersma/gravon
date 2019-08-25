@@ -16,7 +16,7 @@ piece, other = 'F', 'X'
 print('{} and {} starting on the same side:\n'.format(piece, other))
 print('{}\n'.format(pd.value_counts(setups['side_' + piece] == setups['side_' + other], normalize=True, sort=False)))
 
-# More detailed analysis
+# Unpublished analysis
 print('{}\n'.format(pd.Series(setups['side_' + piece] == 'R').corr(setups['side_' + other] == 'R')))
 print('{}\n'.format(pd.crosstab(setups['side_' + piece], setups['side_' + other], margins=True, normalize='all')))
 print('{}\n'.format(pd.crosstab(setups['side_' + piece], setups['side_' + other], margins=True, normalize='index')))
