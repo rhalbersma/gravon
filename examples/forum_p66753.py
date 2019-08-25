@@ -12,8 +12,8 @@ games = pd.read_csv("../data/classic.csv").query('game_fmt == ".xml"')
 setups = tidy.setups(games.copy())
 
 # http://forum.stratego.com/topic/4470-top-20-common-game-setups-at-gravon-site/?p=66753
-setups = tidy.add_state(setups)
-count, probs = pd.Series(setups['state']).apply(lambda x: x.placement).agg(['sum', 'mean'])
+setups = tidy.add_board(setups)
+count, probs = pd.Series(setups['board']).apply(lambda x: x.tensor).agg(['sum', 'mean'])
 
 unique_pieces = [ 'X', '9', '1', 'F' ]
 unique_ranks = [ stratego.Setup.ranks[piece] for piece in unique_pieces ]

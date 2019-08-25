@@ -12,13 +12,13 @@ games = pd.read_csv("../data/classic.csv").query('game_fmt == ".xml"')
 setups = tidy.setups(games.copy())
 
 # http://stratego-tips.blogspot.com/2017/04/wonloss-percentage-of-every-stratego.html
-setups = tidy.add_state(setups)
+setups = tidy.add_board(setups)
 setups = tidy.add_WLD_score(setups)
 
 np.set_printoptions(formatter={'float': '{:7.2%}'.format}, linewidth=100)
 F = stratego.Setup.ranks['F']
-count_W  = pd.Series(setups.query('W == True' )['state']).apply(lambda x: x.placement[F,:,:]).agg(['sum'])[0]
-count_WL = pd.Series(setups.query('D == False')['state']).apply(lambda x: x.placement[F,:,:]).agg(['sum'])[0]
+count_W  = pd.Series(setups.query('W == True' )['board']).apply(lambda x: x.tensor[F,:,:]).agg(['sum'])[0]
+count_WL = pd.Series(setups.query('D == False')['board']).apply(lambda x: x.tensor[F,:,:]).agg(['sum'])[0]
 print('Won /(Won+Loss) Percentage from Every Flag Position\n')
 print('{}\n'.format(np.flip(count_W / count_WL, axis=0)))
 np.set_printoptions()

@@ -6,7 +6,7 @@
 import numpy as np
 
 def EU2US(piece: str) -> str:
-    return {
+    switch = {
         'F': 'F',
         '1': 'S',
         '2': '9',
@@ -19,10 +19,11 @@ def EU2US(piece: str) -> str:
         '9': '2',
         'X': '1',
         'B': 'B'
-    }[piece]
+    }
+    return switch.get(piece, piece)
 
 def US2EU(piece: str) -> str:
-    return {
+    switch = {
         'F': 'F',
         'S': '1',
         '9': '2',
@@ -35,7 +36,8 @@ def US2EU(piece: str) -> str:
         '2': '9',
         '1': 'X',
         'B': 'B'
-    }[piece]
+    }
+    return switch.get(piece, piece)
 
 class Setup:
     W, H = 10, 4
@@ -53,34 +55,34 @@ class Setup:
 
     def __init__(self, setup: str, game_type: str='classic'):
         assert len(setup) == self.W * self.H
-        self.board = np.array([ piece for piece in setup ]).reshape(self.H, self.W)
-        self.placement = np.array([ self.board == piece for piece in self.pieces ]).astype(int)
+        self.matrix = np.array([ piece for piece in setup ]).reshape(self.H, self.W)
+        self.tensor = np.array([ self.matrix == piece for piece in self.pieces ]).astype(int)
         self.game_type = game_type
         assert setup == str(self)
         assert self.is_legal()
 
     def is_legal(self) -> bool:
-        return dict(zip(*np.unique(self.board, return_counts=True))) == dict(zip(self.pieces, self.counts[self.game_type]))
+        return dict(zip(*np.unique(self.matrix, return_counts=True))) == dict(zip(self.pieces, self.counts[self.game_type]))
 
     def __str__(self) -> str:
-        return ''.join(self.board.flatten())
+        return ''.join(self.matrix.flatten())
 
     def diagram(self) -> str:
-        return np.array2string(np.flip(self.board, axis=0))
+        return '\n'.join(''.join(str(piece) for piece in row) for row in np.flip(self.matrix, axis=0))
 
     def where(self, unique_piece: str='F') -> list:
-        loc = np.argwhere(self.board == unique_piece)
+        loc = np.argwhere(self.matrix == unique_piece)
         assert len(loc) == 1
         return loc[0]
 
     def side(self, unique_piece: str='F') -> str:
-        loc = np.argwhere(self.board == unique_piece)
+        loc = np.argwhere(self.matrix == unique_piece)
         assert len(loc) == 1
         column = loc[0][1]
         return 'L' if column in range(self.W // 2) else 'R'
 
     def mirror(self):
-        self.board = np.flip(self.board, axis=1)
+        self.matrix = np.flip(self.matrix, axis=1)
         return self
 
     def canonical(self, dst_side: str='L', unique_piece: str='F'):
@@ -90,10 +92,10 @@ class Setup:
     def square(self, sq: str):
         col = ord(sq[0]) - ord('a')
         row = int(sq[1]) - 1
-        return self.board[row, col]
+        return self.matrix[row, col]
 
     def rdist(self, p: str) -> str:
-        return ''.join([str(i) for i in np.sum(self.board == p, axis=1)])
+        return ''.join([str(i) for i in np.sum(self.matrix == p, axis=1)])
 
     def cdist(self, p: str) -> str:
-        return ''.join([str(i) for i in np.sum(self.board == p, axis=0)])
+        return ''.join([str(i) for i in np.sum(self.matrix == p, axis=0)])

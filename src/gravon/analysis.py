@@ -183,7 +183,7 @@ archive.make(*pattern.equals(setups, agg.iloc[12]['setup']))
 
 # Appendix D of Vincent de Boer's thesis
 # http://www.kbs.twi.tudelft.nl/docs/MSc/2007/deBoer/thesis.pdf 
-VdB = [ stratego.Setup(pattern.board2string(s)).canonical().strados2() for s in [
+VdB = [ stratego.Setup(pattern.matrix2string(s)).canonical().strados2() for s in [
 """
 6225263X26
 54B1927782

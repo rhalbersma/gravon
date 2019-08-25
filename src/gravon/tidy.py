@@ -30,26 +30,26 @@ def add_WLD_score(df: pd.DataFrame) -> pd.DataFrame:
         df['score'] = df.apply(lambda x: 1.0 * x['W'] + 0.5 * x['D'] + 0.0 * x['L'], axis=1)
     return df
 
-def add_state(df: pd.DataFrame) -> pd.DataFrame:
-    if not 'state' in df.columns:
-        df['state'] = df.apply(lambda x: stratego.Setup(x['setup'], x['game_type']), axis=1)
+def add_board(df: pd.DataFrame) -> pd.DataFrame:
+    if not 'board' in df.columns:
+        df['board'] = df.apply(lambda x: stratego.Setup(x['setup'], x['game_type']), axis=1)
     return df
 
 unique_pieces = [ 'F', '1', '9', 'X' ]
 
 def add_unique_piece_sides(df: pd.DataFrame) -> pd.DataFrame:
-    if not 'state' in df.columns:
-        df = add_state(df)
+    if not 'board' in df.columns:
+        df = add_board(df)
     for piece in unique_pieces:
-        df['side_'  + piece] = df['state'].apply(lambda x: x.side(piece))
+        df['side_'  + piece] = df['board'].apply(lambda x: x.side(piece))
     return df
 
 def add_unique_piece_distances(df: pd.DataFrame) -> pd.DataFrame:
-    if not 'state' in df.columns:
-        df = add_state(df)
+    if not 'board' in df.columns:
+        df = add_board(df)
     manhattan = lambda x, y: abs(x[0] - y[0]) + abs(x[1] - y[1])
     for i, piece in enumerate(unique_pieces):
         for j, other in enumerate(unique_pieces):
             if i < j:
-                df['dist_' + piece + other] = df['state'].apply(lambda x: manhattan(x.where(piece), x.where(other)))
+                df['dist_' + piece + other] = df['board'].apply(lambda x: manhattan(x.where(piece), x.where(other)))
     return df

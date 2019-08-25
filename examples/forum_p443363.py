@@ -12,8 +12,8 @@ games = pd.read_csv("../data/classic.csv").query('game_fmt == ".xml"')
 setups = tidy.setups(games.copy())
 
 # http://forum.stratego.com/topic/4470-top-20-common-game-setups-at-gravon-site/?p=66753
-setups = tidy.add_state(setups)
-count, probs = pd.Series(setups['state']).apply(lambda x: x.placement).agg(['sum', 'mean'])
+setups = tidy.add_board(setups)
+count, probs = pd.Series(setups['board']).apply(lambda x: x.tensor).agg(['sum', 'mean'])
 
 np.set_printoptions(formatter={'float': '{:6.2f}'.format}, linewidth=120)
 
@@ -36,8 +36,9 @@ print('{}\n'.format(delta_piece_entropy / piece_counts))
 print('{}\n'.format(np.flip(gravon_square_entropy, axis=1)))
 np.set_printoptions()
 
+# More detailed analysis
 gravon_LogL = -gravon_entropy
-setups['LogL'] = setups['state'].apply(lambda x: np.sum(x.placement * np.log2(probs)))
+setups['LogL'] = setups['board'].apply(lambda x: np.sum(x.tensor * np.log2(probs)))
 setups['surprise'] = gravon_LogL - setups['LogL']
 
 setups.sort_values(by=['surprise'], ascending=False, inplace=True)

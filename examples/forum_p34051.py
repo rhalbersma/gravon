@@ -13,8 +13,8 @@ setups = tidy.setups(games.copy())
 
 # http://forum.stratego.com/topic/2429-analyzing-game-setups/?p=34051
 setups = setups.drop_duplicates(subset='setup')
-setups = tidy.add_state(setups)
-count, probs = pd.Series(setups['state']).apply(lambda x: x.placement).agg(['sum', 'mean'])
+setups = tidy.add_board(setups)
+count, probs = pd.Series(setups['board']).apply(lambda x: x.tensor).agg(['sum', 'mean'])
 
 np.set_printoptions(formatter={'float': '{:7.2%}'.format}, linewidth=100)
 piece_order = [ 'F' ] + list(reversed(stratego.Setup.pieces[1:11])) + [ 'B' ]
@@ -24,4 +24,5 @@ for row in reversed(range(4)):
         print('{}{}:\n'.format(chr(col + ord('a')), row + 1))
         print('{}\n'.format(count[rank_order,row, col]))
         print('{}\n'.format(probs[rank_order,row, col]))
+print('Number of Unique Stratego setups analyzed: {}'.format(len(setups)))
 np.set_printoptions()

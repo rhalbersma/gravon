@@ -15,13 +15,24 @@ setups = tidy.setups(games.copy())
 setups = tidy.add_board(setups)
 count, probs = pd.Series(setups['board']).apply(lambda x: x.tensor).agg(['sum', 'mean'])
 
-np.set_printoptions(formatter={'float': '{:7.2%}'.format}, linewidth=100)
-print('The charts below show Stratego piece placements from {:,} setups.'.format(len(setups)))
-for piece in list(reversed(stratego.Setup.pieces[1:11])) + [ 'B', 'F' ]:
+np.set_printoptions(formatter={'float': '{:5.3f}'.format}, linewidth=100)
+
+print('Placement by piece and square')
+for piece in stratego.Setup.pieces:
     r = stratego.Setup.ranks[piece]
-    print('Common Stratego {} Placement\n'.format(stratego.Setup.names[r].capitalize()))
-    print('{}\n'.format(np.flip(count[r,:,:], axis=1)))
-    print('{}\n'.format(np.sum (count[r,:,:], axis=1)))
+    print('{}'.format(piece))
     print('{}\n'.format(np.flip(probs[r,:,:], axis=1)))
-    print('{}\n'.format(np.sum (probs[r,:,:], axis=1) / stratego.Setup.counts['classic'][r]))
+
+print('Placement by piece and column')
+for piece in stratego.Setup.pieces:
+    r = stratego.Setup.ranks[piece]
+    print('{}: {}'.format(piece, np.sum (probs[r,:,:], axis=0)))
+print()
+
+print('Placement by piece and row')
+for piece in stratego.Setup.pieces:
+    r = stratego.Setup.ranks[piece]
+    print('{}: {}'.format(piece, np.sum (probs[r,:,:], axis=1)))
+print()
+
 np.set_printoptions()
