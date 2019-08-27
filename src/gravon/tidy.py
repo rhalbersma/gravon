@@ -5,14 +5,16 @@
 
 import pandas as pd
 
+from . import pieces
 from . import strados2
 from . import stratego
 
-def setups(df: pd.DataFrame) -> pd.DataFrame:
+def setups(df: pd.DataFrame, fmt: str='EU') -> pd.DataFrame:
     # parse the 100-char board string into red and blue setups
-    parser = strados2.SetupParser(stratego.Setup.pieces)
+    parser = strados2.SetupParser(pieces.encoding[fmt])
     df['setups'] = df['field_content'].apply(lambda x: parser(x))
     df[['setup1', 'setup2']] = pd.DataFrame(df['setups'].values.tolist(), index=df.index)
+    df['fmt'] = fmt
     df.drop(columns=['field_content', 'setups'], inplace=True)
 
     # tidy the wide DataFrame into long format
@@ -32,22 +34,22 @@ def add_WLD_score(df: pd.DataFrame) -> pd.DataFrame:
 
 def add_board(df: pd.DataFrame) -> pd.DataFrame:
     if not 'board' in df.columns:
-        df['board'] = df.apply(lambda x: stratego.Setup(x['setup'], x['game_type']), axis=1)
+        df['board'] = df.apply(lambda x: stratego.Setup(x['setup'], x['fmt'], x['game_type']), axis=1)
     return df
 
-unique_pieces = [ 'F', '1', '9', 'X' ]
-
-def add_unique_piece_sides(df: pd.DataFrame) -> pd.DataFrame:
+def add_unique_piece_sides(df: pd.DataFrame, fmt: str='EU') -> pd.DataFrame:
     if not 'board' in df.columns:
         df = add_board(df)
+    unique_pieces = [ pieces.encoding[fmt][u] for u in pieces.unique_ranks ]
     for piece in unique_pieces:
         df['side_'  + piece] = df['board'].apply(lambda x: x.side(piece))
     return df
 
-def add_unique_piece_distances(df: pd.DataFrame) -> pd.DataFrame:
+def add_unique_piece_distances(df: pd.DataFrame, fmt: str='EU') -> pd.DataFrame:
     if not 'board' in df.columns:
         df = add_board(df)
     manhattan = lambda x, y: abs(x[0] - y[0]) + abs(x[1] - y[1])
+    unique_pieces = [ pieces.encoding[fmt][u] for u in pieces.unique_ranks ]
     for i, piece in enumerate(unique_pieces):
         for j, other in enumerate(unique_pieces):
             if i < j:
