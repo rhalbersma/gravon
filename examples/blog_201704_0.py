@@ -17,9 +17,9 @@ count, probs = pd.Series(setups['board']).apply(lambda x: x.tensor).agg(['sum', 
 
 np.set_printoptions(formatter={'float': '{:7.2%}'.format}, linewidth=100)
 print('The charts below show Stratego piece placements from {:,} setups.'.format(len(setups)))
-for piece in list(reversed(pieces.encoding['EU'][1:11])) + [ 'B', 'F' ]:
+for piece in list(reversed(pieces.chars['EU'][1:11])) + [ 'B', 'F' ]:
     r = pieces.ranks['EU'][piece]
-    print('Common Stratego {} Placement\n'.format(pieces.full_names[r].capitalize()))
+    print('Common Stratego {} Placement\n'.format(pieces.names[r].capitalize()))
     print('{}\n'.format(np.flip(count[r,:,:], axis=1)))
     print('{}\n'.format(np.sum (count[r,:,:], axis=1)))
     print('{}\n'.format(np.flip(probs[r,:,:], axis=1)))

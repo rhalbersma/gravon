@@ -46,7 +46,8 @@ for r in pieces.unique_ranks:
     points = 1.0 * count_W + 0.5 * count_D + 0.0 * count_L
     games = count_W + count_D + count_L
     score = points / games
-    print('Average Score from Every {} Position\n'.format(pieces.full_names[r].capitalize()))
+    print('Average Score from Every {} Position\n'.format(pieces.names[r].capitalize()))
     print('Placement:\n{}\n'.format(np.flip(probs[r,:,:], axis=0)))
     print('Score:    \n{}\n'.format(np.flip(score, axis=0)))
 np.set_printoptions()
+

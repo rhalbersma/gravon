@@ -5,7 +5,7 @@
 
 import pandas as pd
 
-from gravon import tidy
+from gravon import pieces, tidy
 
 games = pd.read_csv("../data/classic.csv").query('game_fmt == ".xml"')
 setups = tidy.setups(games.copy())
@@ -13,8 +13,9 @@ setups = tidy.setups(games.copy())
 # http://forum.stratego.com/topic/2429-analyzing-game-setups/?p=38136
 setups = tidy.add_unique_piece_sides(setups)
 
-for i, piece in enumerate(tidy.unique_pieces):
-    for j, other in enumerate(tidy.unique_pieces):
+unique_pieces = [ pieces.chars['EU'][u] for u in pieces.unique_ranks ]
+for i, piece in enumerate(unique_pieces):
+    for j, other in enumerate(unique_pieces):
         if i < j:
             print('{} and {} starting on the same side:\n'.format(piece, other))
             print('{}\n'.format(pd.value_counts(setups['side_' + piece] == setups['side_' + other], normalize=True, sort=False)))

@@ -19,16 +19,16 @@ class Setup:
 
     def __init__(self, setup: str, fmt: str='EU', game_type: str='classic'):
         assert len(setup) == self.W * self.H
-        self.encoding = pieces.encoding[fmt]
-        self.unique_pieces = [ self.encoding[u] for u in pieces.unique_ranks ]
+        self.chars = pieces.chars[fmt]
+        self.unique_pieces = [ self.chars[u] for u in pieces.unique_ranks ]
         self.matrix = np.array([ piece for piece in setup ]).reshape(self.H, self.W)
-        self.tensor = np.array([ self.matrix == piece for piece in self.encoding ]).astype(int)
+        self.tensor = np.array([ self.matrix == piece for piece in self.chars ]).astype(int)
         self.game_type = game_type
         assert setup == str(self)
         assert self.is_legal()
 
     def is_legal(self) -> bool:
-        return dict(zip(*np.unique(self.matrix, return_counts=True))) == dict(zip(self.encoding, self.counts[self.game_type]))
+        return dict(zip(*np.unique(self.matrix, return_counts=True))) == dict(zip(self.chars, self.counts[self.game_type]))
 
     def __str__(self) -> str:
         return ''.join(self.matrix.flatten())
