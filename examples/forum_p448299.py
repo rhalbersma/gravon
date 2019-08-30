@@ -10,7 +10,7 @@ from gravon import stratego, tidy
 
 games = pd.read_csv("../data/classic.csv").query('game_fmt == ".xml"')
 piece_fmt = 'EU'
-setups = tidy.setups(games.copy(), 'EU')
+setups = tidy.setups(games.copy(), piece_fmt)
 piece_chars = pieces.chars[piece_fmt]
 piece_ranks = pieces.ranks[piece_fmt]
 
