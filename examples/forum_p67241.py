@@ -8,11 +8,12 @@ import pandas as pd
 from gravon import stratego, tidy
 
 games = pd.read_csv("../data/classic.csv").query('game_fmt == ".xml"')
-setups = tidy.setups(games.copy())
+piece_fmt = 'US'
+setups = tidy.setups(games.copy(), piece_fmt)
 
 # http://forum.stratego.com/topic/4470-top-20-common-game-setups-at-gravon-site/?p=67241
 setups = tidy.add_WLD_score(setups)
-df = setups.groupby('setup').agg({
+df = setups.groupby('setup_str').agg({
     'W': ['sum'],
     'L': ['sum'],
     'D': ['sum'],
@@ -28,5 +29,5 @@ atleast10.reset_index(drop=True, inplace=True)
 frequent20 = atleast10.head(20)
 
 for t in frequent20.itertuples():
-    print('{}'.format(''.join(map(stratego.EU2US, stratego.Setup(t.setup).diagram()))))
+    print('{}'.format(stratego.SetupBoard(t.setup_str, piece_fmt).diagram(col_sep='')))
     print('Wins = {} Losses = {} Ties = {} Games Played = {} Winning Percentage = {:5.2%}\n'.format(t.W, t.L, t.D, t.count, t.W / (t.W + t.L)))

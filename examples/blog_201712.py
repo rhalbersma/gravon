@@ -13,7 +13,7 @@ setups = tidy.setups(games.copy())
 # http://stratego-tips.blogspot.com/2017/12/marshal-blitzer-games-from-gravon.html
 setups = tidy.add_WLD_score(setups)
 
-df = setups.groupby('setup').agg({
+df = setups.groupby('setup_str').agg({
     'W': ['sum'],
     'L': ['sum'],
     'D': ['sum'],
@@ -29,8 +29,8 @@ atleast10.reset_index(drop=True, inplace=True)
 best_winning_percentage = atleast10.query('count >= 50').sort_values(by=['mean'], ascending=False)
 
 for i in [ 5 ]:
-    s = best_winning_percentage.iloc[i]['setup']
-    print('{}\n'.format(stratego.Setup(s).diagram()))
+    s = best_winning_percentage.iloc[i]['setup_str']
+    print('{}\n'.format(stratego.SetupBoard(s).diagram()))
     df = pattern.equal(setups, s)
     print('{}\n'.format(df['game_id']))
     archive.make(df, s)

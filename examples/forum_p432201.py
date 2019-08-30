@@ -6,7 +6,7 @@
 import numpy as np
 import pandas as pd
 
-from gravon import archive, pattern, stratego, tidy
+from gravon import archive, pattern, tidy
 
 games = pd.read_csv("../data/classic.csv").query('game_fmt == ".xml"')
 setups = tidy.setups(games.copy())
@@ -15,8 +15,8 @@ setups = tidy.setups(games.copy())
 setups = tidy.add_board(setups)
 setups = tidy.add_WLD_score(setups)
 
-rank_B = stratego.Setup.ranks['B']
-setups['bombed_off_column'] = setups['board'].apply(lambda x: max(np.sum(x.tensor[rank_B,:,:], axis=0)) == 4)
+rank_B = 11
+setups['bombed_off_column'] = setups['setup_board'].apply(lambda x: max(np.sum(x.tensor[rank_B,:,:], axis=0)) == 4)
 df = setups.query('bombed_off_column == True')
 df['G'] = 1
 print('{}\n'.format(df[['G', 'W', 'L', 'D']].agg(['sum'])))

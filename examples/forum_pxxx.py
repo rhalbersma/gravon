@@ -10,19 +10,15 @@ from gravon import stratego, tidy
 
 games = pd.read_csv("../data/classic.csv").query('game_fmt == ".xml"')
 setups = tidy.setups(games.copy())
-
-# http://forum.stratego.com/topic/358733-predictability-and-bluff/?p=460634
 setups = tidy.add_board(setups)
-setups = tidy.add_WLD_score(setups)
 
 # Unpublished analysis
-
 pd.options.display.float_format = '{:7.2%}'.format
 lanes = [('a4', 'b4'), ('e4', 'f4'), ('i4', 'j4')]
 
 for lane in lanes:
-    setups[lane[0]] = setups['board'].apply(lambda x: x.square(lane[0]))
-    setups[lane[1]] = setups['board'].apply(lambda x: x.square(lane[1]))
+    setups[lane[0]] = setups['setup_board'].apply(lambda x: x.square(lane[0]))
+    setups[lane[1]] = setups['setup_board'].apply(lambda x: x.square(lane[1]))
     setups[lane[0] + lane[1]] = setups[lane[0]] + setups[lane[1]]
 
 for lane in lanes:

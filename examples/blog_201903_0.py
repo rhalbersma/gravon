@@ -13,7 +13,7 @@ setups = tidy.setups(games.copy())
 # http://stratego-tips.blogspot.com/2019/03/listing-of-most-popular-stratego-game.html
 setups = tidy.add_WLD_score(setups)
 
-df = setups.groupby('setup').agg({
+df = setups.groupby('setup_str').agg({
     'W': ['sum'],
     'L': ['sum'],
     'D': ['sum'],
@@ -28,5 +28,5 @@ atleast10 = df.query('count >= 10').sort_values(by=['count'], ascending=False)
 atleast10.reset_index(drop=True, inplace=True)
 
 for t in atleast10.itertuples():
-    print('{}\n'.format(stratego.Setup(t.setup).diagram()))
+    print('{}\n'.format(stratego.SetupBoard(t.setup_str).diagram()))
     print('Wins = {} Losses = {} Ties = {} Games Played = {} Winning Percentage = {:5.2%}\n'.format(t.W, t.L, t.D, t.count, t.W / (t.W + t.L)))

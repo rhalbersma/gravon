@@ -13,11 +13,11 @@ setups = tidy.setups(games.copy())
 
 # http://forum.stratego.com/topic/4470-top-20-common-game-setups-at-gravon-site/?p=66753
 setups = tidy.add_board(setups)
-count, probs = pd.Series(setups['board']).apply(lambda x: x.tensor).agg(['sum', 'mean'])
+count, probs = setups['setup_board'].apply(lambda x: x.tensor).agg(['sum', 'mean'])
 
 np.set_printoptions(formatter={'float': '{:6.2f}'.format}, linewidth=120)
 
-piece_counts = np.array(stratego.Setup.counts['classic'])
+piece_counts = np.array(stratego.SetupBoard.counts['classic'])
 random_piece_probs = piece_counts / 40
 random_piece_entropy = 40 * (-random_piece_probs * np.log2(random_piece_probs))
 random_entropy = np.sum(random_piece_entropy)
@@ -38,7 +38,7 @@ np.set_printoptions()
 
 # Unpublished analysis
 gravon_LogL = -gravon_entropy
-setups['LogL'] = setups['board'].apply(lambda x: np.sum(x.tensor * np.log2(probs)))
+setups['LogL'] = setups['setup_board'].apply(lambda x: np.sum(x.tensor * np.log2(probs)))
 setups['surprise'] = gravon_LogL - setups['LogL']
 
 setups.sort_values(by=['surprise'], ascending=False, inplace=True)

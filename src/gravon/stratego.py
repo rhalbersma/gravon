@@ -7,7 +7,7 @@ import numpy as np
 
 from . import pieces
 
-class Setup:
+class SetupBoard:
     W, H = 10, 4
 
     counts = {
@@ -17,7 +17,7 @@ class Setup:
         'ultimate': [ 1, 1, 4, 2, 2, 2, 2, 1, 1, 1, 1, 2 ]
     }
 
-    def __init__(self, setup: str, fmt: str='EU', game_type: str='classic'):
+    def __init__(self, setup: str, fmt: str='EU', game_type: str='classic') -> None:
         assert len(setup) == self.W * self.H
         self.chars = pieces.chars[fmt]
         self.unique_pieces = [ self.chars[u] for u in pieces.unique_ranks ]
@@ -33,8 +33,8 @@ class Setup:
     def __str__(self) -> str:
         return ''.join(self.matrix.flatten())
 
-    def diagram(self) -> str:
-        return '\n'.join(''.join(str(piece) for piece in row) for row in np.flip(self.matrix, axis=0))
+    def diagram(self, col_sep: str=' ') -> str:
+        return '\n'.join(col_sep.join(str(piece) for piece in row) for row in np.flip(self.matrix, axis=0))
 
     def where(self, unique_piece: str='F') -> list:
         assert unique_piece in self.unique_pieces

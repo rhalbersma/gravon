@@ -13,14 +13,14 @@ def square2index(sq: str) -> int:
     col = ord(sq[0]) - ord('a')
     return 10 * row + col
 
-def equal(df: pd.DataFrame, pat2d: str, var: str='setup') -> pd.DataFrame:
+def equal(df: pd.DataFrame, pat2d: str, var: str='setup_str') -> pd.DataFrame:
     pat = board2string(pat2d)
     return df.query(var + ' == @pat')
 
-def match(df: pd.DataFrame, pat2d: str, var: str='setup') -> pd.DataFrame:
+def match(df: pd.DataFrame, pat2d: str, var: str='setup_str') -> pd.DataFrame:
     pat = board2string(pat2d)
     return df.query(var + '.str.match(@pat)')
 
-def piece_on(df: pd.DataFrame, piece: str, indices: list, var: str='setup') -> pd.DataFrame:
+def piece_on(df: pd.DataFrame, piece: str, indices: list, var: str='setup_str') -> pd.DataFrame:
     pred = lambda x: any(x[idx] == piece for idx in indices)
     return df.loc[lambda x: x[var].apply(pred)]

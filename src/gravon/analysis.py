@@ -32,8 +32,8 @@ BB......BB
 ..........
 """)[0]
 
-setups = [ s.pieces for s in matches['setup'] ]
-pieces = stratego.Setup.pieces
+setups = [ s.pieces for s in matches['setup_str'] ]
+pieces = stratego.SetupBoard.pieces
 
 num_setups = len(setups)
 placements = { p : sum(s == p for s in setups) for p in pieces }
@@ -68,7 +68,7 @@ def AD_B(r: str) -> bool:
     return (3 <= (n[0] + n[1]) <= 6) and (n[0] >= 2) and (n[0] >= n[1])
 
 setups = df
-setups = setups.assign(rdistB = setups['setup'].apply(lambda x: stratego.Setup(x).rdist('B')))
+setups = setups.assign(rdistB = setups['setup_str'].apply(lambda x: stratego.SetupBoard(x).rdist('B')))
 setups = setups.assign(is_AD_B = setups['rdistB'].apply(lambda x: AD_B(x)))
 setups.groupby('is_AD_B').agg({
     'W': ['sum'],
@@ -90,7 +90,7 @@ def AD_3(r: str) -> bool:
     n = [ int(c) for c in r ]
     return (2 <= n[0] <= 4) and (1 <= n[1] <= 3) and ((n[2] + n[3]) <= 2)
 
-setups = setups.assign(rdist3 = setups['setup'].apply(lambda x: stratego.Setup(x).rdist('3')))
+setups = setups.assign(rdist3 = setups['setup_str'].apply(lambda x: stratego.SetupBoard(x).rdist('3')))
 setups = setups.assign(is_AD_3 = setups['rdist3'].apply(lambda x: AD_3(x)))
 setups.groupby('is_AD_3').agg({
     'W': ['sum'],
@@ -113,7 +113,7 @@ def AD_2r(r: str) -> bool:
     n = [ int(c) for c in r ]
     return (1 <= n[0] <= 2) and (n[3] <= 3)
 
-setups = setups.assign(rdist2 = setups['setup'].apply(lambda x: stratego.Setup(x).rdist('2')))
+setups = setups.assign(rdist2 = setups['setup_str'].apply(lambda x: stratego.SetupBoard(x).rdist('2')))
 setups = setups.assign(is_AD_2r = setups['rdist2'].apply(lambda x: AD_2r(x)))
 setups.groupby('is_AD_2r').agg({
     'W': ['sum'],
@@ -135,7 +135,7 @@ def AD_2c(r: str) -> bool:
     n = [ int(c) for c in r ]
     return (1 <= (n[0] + n[1] + n[4] + n[5] + n[8] + n[9]) <= 4)
 
-setups = setups.assign(cdist2 = setups['setup'].apply(lambda x: stratego.Setup(x).cdist('2')))
+setups = setups.assign(cdist2 = setups['setup_str'].apply(lambda x: stratego.SetupBoard(x).cdist('2')))
 setups = setups.assign(is_AD_2c = setups['cdist2'].apply(lambda x: AD_2c(x)))
 setups.groupby('is_AD_2c').agg({
     'W': ['sum'],
@@ -161,7 +161,7 @@ setups.groupby('is_AD_B32').agg({
     'score': ['count', 'mean']    
 })
 
-agg = setups.groupby('setup').agg({
+agg = setups.groupby('setup_str').agg({
     'W': ['sum'],
     'L': ['sum'],
     'D': ['sum'],
@@ -176,14 +176,14 @@ agg.sort_values(by=['count'], ascending=False, inplace=True)
 agg.sort_values(by='z', ascending=False, inplace=True)
 agg.reset_index(inplace=True)
 
-archive.make(*pattern.equals(setups, agg.iloc[1]['setup']))
-archive.make(*pattern.equals(setups, agg.iloc[3]['setup']))
-archive.make(*pattern.equals(setups, agg.iloc[12]['setup']))
+archive.make(*pattern.equals(setups, agg.iloc[1]['setup_str']))
+archive.make(*pattern.equals(setups, agg.iloc[3]['setup_str']))
+archive.make(*pattern.equals(setups, agg.iloc[12]['setup_str']))
 
 
 # Appendix D of Vincent de Boer's thesis
 # http://www.kbs.twi.tudelft.nl/docs/MSc/2007/deBoer/thesis.pdf 
-VdB = [ stratego.Setup(pattern.matrix2string(s)).canonical().strados2() for s in [
+VdB = [ stratego.SetupBoard(pattern.matrix2string(s)).canonical().strados2() for s in [
 """
 6225263X26
 54B1927782
@@ -231,8 +231,8 @@ agg.query('setup in @VdB')
 
 
 def square_crosstab(df, sq1: str, sq2: str):
-    df['sq1'] = df['setup'].apply(lambda x: x.square(sq1))
-    df['sq2'] = df['setup'].apply(lambda x: x.square(sq2))
+    df['sq1'] = df['setup_str'].apply(lambda x: x.square(sq1))
+    df['sq2'] = df['setup_str'].apply(lambda x: x.square(sq2))
     return df
 
 df1 = square_crosstab(df, 'e4', 'f4')
@@ -298,7 +298,7 @@ agg = df1.groupby(['sq1', 'sq2']).agg({
 # for i in range(10):
 #     print(np.round(np.bincount(cnts[:,i]) / num_setups, 3))
 
-setups = setups.assign(rdist7 = setups['setup'].apply(lambda x: stratego.Setup(x).rdist('7')))
+setups = setups.assign(rdist7 = setups['setup_str'].apply(lambda x: stratego.SetupBoard(x).rdist('7')))
 #setups = setups.assign(is_AD_3 = setups['rdist3'].apply(lambda x: AD_3(x)))
 #setups.groupby('is_AD_3').agg({
 #    'W': ['sum'],
