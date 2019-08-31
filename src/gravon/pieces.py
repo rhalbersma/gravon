@@ -10,7 +10,7 @@ chars = {
 
 names = [ 'flag', 'spy', 'scout', 'miner', 'sergeant', 'lieutenant', 'captain', 'major', 'colonel', 'general', 'marshal', 'bomb' ]
 
-ranks = { piece_fmt : dict(zip(chars[piece_fmt], range(12)))  for piece_fmt in [ 'EU', 'US' ] }
+ranks = { piece_fmt : dict(zip(chars[piece_fmt], range(12))) for piece_fmt in [ 'EU', 'US' ] }
 
 def translate(piece_char: str, src_fmt: str='EU', dst_fmt: str='US') -> str:
     assert len(piece_char) == 1

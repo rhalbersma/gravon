@@ -20,7 +20,7 @@ rank_order = [ 0 ] + list(reversed(range(1, 11))) + [ 11 ]
 for row in reversed(range(4)):
     for col in range(10):
         print('{}{}:\n'.format(chr(col + ord('a')), row + 1))
-        print('{}\n'.format(count[rank_order,row, col]))
-        print('{}\n'.format(probs[rank_order,row, col]))
+        print('{}\n'.format(count[rank_order, row, col]))
+        print('{}\n'.format(probs[rank_order, row, col]))
 print('Number of stratego.SetupBoards analyzed {:,}'.format(len(setups)))
 np.set_printoptions()

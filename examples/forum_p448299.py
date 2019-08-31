@@ -29,13 +29,13 @@ for piece in piece_chars:
 print('Placement by piece and column')
 for piece in piece_chars:
     r = piece_ranks[piece]
-    print('{}: {}'.format(piece, np.sum (probs[r,:,:], axis=0)))
+    print('{}: {}'.format(piece, np.sum(probs[r,:,:], axis=0)))
 print()
 
 print('Placement by piece and row')
 for piece in piece_chars:
     r = piece_ranks[piece]
-    print('{}: {}'.format(piece, np.sum (probs[r,:,:], axis=1)))
+    print('{}: {}'.format(piece, np.sum(probs[r,:,:], axis=1)))
 print()
 
 np.set_printoptions()

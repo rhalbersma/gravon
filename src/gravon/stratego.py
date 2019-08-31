@@ -17,10 +17,15 @@ class SetupBoard:
         'ultimate': [ 1, 1, 4, 2, 2, 2, 2, 1, 1, 1, 1, 2 ]
     }
 
-    def __init__(self, setup: str, fmt: str='EU', game_type: str='classic') -> None:
+    lane_cols = [ list(range(0, 3)), list(range(3, 7)), list(range(7, 10)) ]
+    lane_char = [ 'L', 'M', 'R' ]
+    side_cols = [ list(range(0, 5)), list(range(5, 10)) ]
+    side_char = [ 'L', 'R' ]
+
+    def __init__(self, setup: str, piece_fmt: str='EU', game_type: str='classic') -> None:
         assert len(setup) == self.W * self.H
-        self.chars = pieces.chars[fmt]
-        self.unique_pieces = [ self.chars[u] for u in pieces.unique_ranks ]
+        self.chars = pieces.chars[piece_fmt]
+        self.unique = [ self.chars[u] for u in pieces.unique_ranks ]
         self.matrix = np.array([ piece for piece in setup ]).reshape(self.H, self.W)
         self.tensor = np.array([ self.matrix == piece for piece in self.chars ]).astype(int)
         self.game_type = game_type
@@ -36,35 +41,58 @@ class SetupBoard:
     def diagram(self, col_sep: str=' ') -> str:
         return '\n'.join(col_sep.join(str(piece) for piece in row) for row in np.flip(self.matrix, axis=0))
 
-    def where(self, unique_piece: str='F') -> list:
-        assert unique_piece in self.unique_pieces
-        loc = np.argwhere(self.matrix == unique_piece)
+    def where(self, piece: str='F') -> list:
+        assert piece in self.unique
+        loc = np.argwhere(self.matrix == piece)
         assert len(loc) == 1
         return loc[0]
 
-    def side(self, unique_piece: str='F') -> str:
-        assert unique_piece in self.unique_pieces
-        loc = np.argwhere(self.matrix == unique_piece)
-        assert len(loc) == 1
-        column = loc[0][1]
-        return 'L' if column in range(self.W // 2) else 'R'
+    def lane(self, piece: str='F') -> str:
+        assert piece in self.unique
+        column = self.where(piece)[1]
+        return self.lane_char[ [ column in lane for lane in self.lane_cols ].index(True) ]
+
+    def side(self, piece: str='F') -> str:
+        assert piece in self.unique
+        column = self.where(piece)[1]
+        return self.side_char[ [ column in side for side in self.side_cols ].index(True) ]
 
     def mirror(self):
         self.matrix = np.flip(self.matrix, axis=1)
         return self
 
-    def canonical(self, dst_side: str='L', unique_piece: str='F'):
-        assert unique_piece in self.unique_pieces
-        src_side = self.side(unique_piece)
+    def canonical(self, dst_side: str='L', piece: str='F'):
+        assert piece in self.unique
+        src_side = self.side(piece)
         return (self, True) if dst_side == src_side else (self.mirror(), False)
 
     def square(self, sq: str):
-        col = ord(sq[0]) - ord('a')
         row = int(sq[1:]) - 1
+        col = ord(sq[0]) - ord('a')
         return self.matrix[row, col]
 
-    def rdist(self, p: str) -> str:
-        return ''.join([str(i) for i in np.sum(self.matrix == p, axis=1)])
+    def row_sums(self, rank: int=None) -> np.array:
+        if rank == None:
+            return np.sum(self.tensor, axis=2)
+        else:
+            return np.sum(self.tensor[rank,:,:], axis=1)
 
-    def cdist(self, p: str) -> str:
-        return ''.join([str(i) for i in np.sum(self.matrix == p, axis=0)])
+    def col_sums(self, rank: int=None) -> np.array:
+        if rank == None:
+            return np.sum(self.tensor, axis=1)
+        else:
+            return np.sum(self.tensor[rank,:,:], axis=0)
+
+    def lane_sums(self, rank: int=None) -> np.array:
+        s = self.col_sums(rank)
+        if rank == None:
+            return np.array([ np.sum(s[:,lane], axis=1) for lane in self.lane_cols ]).transpose()
+        else:
+            return np.array([ np.sum(s[lane])           for lane in self.lane_cols ])
+
+    def side_sums(self, rank: int=None) -> np.array:
+        s = self.col_sums(rank)
+        if rank == None:
+            return np.array([ np.sum(s[:,side], axis=1) for side in self.side_cols ]).transpose()
+        else:
+            return np.array([ np.sum(s[side])           for side in self.side_cols ])

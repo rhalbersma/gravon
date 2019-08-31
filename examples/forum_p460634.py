@@ -16,17 +16,18 @@ setups = tidy.add_board(setups)
 setups = tidy.add_WLD_score(setups)
 
 # Unpublished analysis
-rank_8 = 8
-setups['side_balanced_colonels'] = setups['setup_board'].apply(lambda x: sum(np.sum(x.tensor[rank_8,:,:], axis=0)[:5]) == 1)
+colonel = pieces.names.index('colonel')
+
+setups['side_balanced_colonels'] = setups['setup_board'].apply(lambda x: x.side_sums(colonel).max() == 1)
 print('{}\n'.format(setups['side_balanced_colonels'].value_counts(normalize=True, sort=False)))
-print('{}\n'.format(setups.groupby('side_balanced_colonels')['W', 'L', 'D', 'score'].agg(['mean'])))
+print('{}\n'.format(setups.groupby('side_balanced_colonels')['score'].agg(['count', 'mean'])))
 
-rank_7 = 7
-setups['row_balanced_majors'] = setups['setup_board'].apply(lambda x: max(np.sum(x.tensor[rank_7,:,:], axis=1)) == 1)
-print('{}\n'.format(setups['row_balanced_majors'].value_counts(normalize=True, sort=False)))
-print('{}\n'.format(setups.groupby('row_balanced_majors')['W', 'L', 'D', 'score'].agg(['mean'])))
+major = pieces.names.index('major')
 
-setups['col_sum_majors'] = setups['setup_board'].apply(lambda x: np.sum(x.tensor[rank_7,:,:], axis=0))
-setups['lane_balanced_majors'] = setups['col_sum_majors'].apply(lambda x: sum(x[0:3]) == sum(x[3:7]) == sum(x[7:10]))
+setups['lane_balanced_majors'] = setups['setup_board'].apply(lambda x: x.lane_sums(major).max() == 1)
 print('{}\n'.format(setups['lane_balanced_majors'].value_counts(normalize=True, sort=False)))
-print('{}\n'.format(setups.groupby('lane_balanced_majors')['W', 'L', 'D', 'score'].agg(['mean'])))
+print('{}\n'.format(setups.groupby('lane_balanced_majors')['score'].agg(['count', 'mean'])))
+
+setups['row_balanced_majors'] = setups['setup_board'].apply(lambda x: x.row_sums(major).max() == 1)
+print('{}\n'.format(setups['row_balanced_majors'].value_counts(normalize=True, sort=False)))
+print('{}\n'.format(setups.groupby('row_balanced_majors')['score'].agg(['count', 'mean'])))

@@ -5,7 +5,7 @@
 
 import pandas as pd
 
-from gravon import tidy
+from gravon import pieces, tidy
 
 games = pd.read_csv("../data/classic.csv").query('game_fmt == ".xml"')
 piece_fmt = 'EU'

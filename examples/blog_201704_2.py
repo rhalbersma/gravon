@@ -35,7 +35,6 @@ for idx in range(40):
     print('Win/(Win+Loss) Percentage = {:5.4f} Win/(Win+Loss+Draw) Percentage = {:5.4f}\n'.format(WWL, WWLD))
 
 # Unpublished analysis
-
 count, probs = setups['setup_board'].apply(lambda x: x.tensor).agg(['sum', 'mean'])
 
 np.set_printoptions(formatter={'float': '{:7.2%}'.format}, linewidth=100)
