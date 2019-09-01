@@ -1,10 +1,27 @@
-Analyzing the Gravon archive of Stratego games
-==============================================
+Data science toolkit for the Gravon archive of Stratego games
+=============================================================
 
 [![Language](https://img.shields.io/badge/language-Python-blue.svg)](https://www.python.org/)
 [![Standard](https://img.shields.io/badge/Python-3.6-blue.svg)](https://en.wikipedia.org/wiki/History_of_Python)
 [![License](https://img.shields.io/badge/license-Boost-blue.svg)](https://opensource.org/licenses/BSL-1.0)
 [![](https://tokei.rs/b1/github/rhalbersma/gravon)](https://github.com/rhalbersma/gravon)
+
+Installation
+------------
+
+    mkdir projects
+    cd projects
+    git clone https://github.com/rhalbersma/gravon.git
+    cd gravon
+    python3 -m virtualenv .env
+    source .env/bin/actitvate
+    pip install -e .
+
+Running examples
+----------------
+
+    cd examples
+    python some_example.py
 
 Acknowledgements
 ----------------
