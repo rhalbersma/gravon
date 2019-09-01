@@ -1,13 +1,23 @@
-Data science toolkit for the Gravon archive of Stratego games
-=============================================================
+Data science tools for the Gravon archive of Stratego games
+===========================================================
 
 [![Language](https://img.shields.io/badge/language-Python-blue.svg)](https://www.python.org/)
 [![Standard](https://img.shields.io/badge/Python-3.6-blue.svg)](https://en.wikipedia.org/wiki/History_of_Python)
 [![License](https://img.shields.io/badge/license-Boost-blue.svg)](https://opensource.org/licenses/BSL-1.0)
 [![](https://tokei.rs/b1/github/rhalbersma/gravon)](https://github.com/rhalbersma/gravon)
 
+Requirements
+------------
+
+- Python version 3.6 or higher
+- the `pip` and `virtualenv` Python packages
+- tested on Windows and Linux
+- consult the Python docs for how to set up these requirements
+
 Installation
 ------------
+
+On Linux:
 
     mkdir projects
     cd projects
@@ -16,6 +26,8 @@ Installation
     python3 -m virtualenv .env
     source .env/bin/actitvate
     pip install -e .
+
+On Windows: as above, but with `.env\Scripts\activate` instead of `source/.env/bin/activate`
 
 Running examples
 ----------------
