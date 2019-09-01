@@ -3,14 +3,15 @@
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
 
+# http://stratego-tips.blogspot.com/2019/03/listing-of-most-popular-stratego-game.html
+
 import pandas as pd
 
 from gravon import stratego, tidy
 
 games = pd.read_csv("../data/classic.csv").query('game_fmt == ".xml"')
-setups = tidy.setups(games.copy())
-
-# http://stratego-tips.blogspot.com/2019/03/listing-of-most-popular-stratego-game.html
+piece_fmt = 'US'
+setups = tidy.setups(games.copy(), piece_fmt)
 setups = tidy.add_WLD_score(setups)
 
 df = setups.groupby('setup_str').agg({
@@ -28,5 +29,5 @@ atleast10 = df.query('count >= 10').sort_values(by=['count'], ascending=False)
 atleast10.reset_index(drop=True, inplace=True)
 
 for t in atleast10.itertuples():
-    print('{}\n'.format(stratego.SetupBoard(t.setup_str).diagram()))
+    print('{}'.format(stratego.SetupBoard(t.setup_str, piece_fmt).diagram(sep='')))
     print('Wins = {} Losses = {} Ties = {} Games Played = {} Winning Percentage = {:5.2%}\n'.format(t.W, t.L, t.D, t.count, t.W / (t.W + t.L)))

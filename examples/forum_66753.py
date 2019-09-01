@@ -3,6 +3,8 @@
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
 
+# http://forum.stratego.com/topic/4470-top-20-common-game-setups-at-gravon-site/?p=66753
+
 import numpy as np
 import pandas as pd
 
@@ -10,9 +12,8 @@ from gravon import pieces, tidy
 
 games = pd.read_csv("../data/classic.csv").query('game_fmt == ".xml"')
 setups = tidy.setups(games.copy())
-
-# http://forum.stratego.com/topic/4470-top-20-common-game-setups-at-gravon-site/?p=66753
 setups = tidy.add_board(setups)
+
 count, probs = setups['setup_board'].apply(lambda x: x.tensor).agg(['sum', 'mean'])
 
 np.set_printoptions(formatter={'float': '{:4.3f}'.format}, linewidth=100)

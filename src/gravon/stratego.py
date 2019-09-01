@@ -24,7 +24,7 @@ class SetupBoard:
 
     def __init__(self, setup: str, piece_fmt: str='EU', game_type: str='classic') -> None:
         assert len(setup) == self.W * self.H
-        self.chars = pieces.chars[piece_fmt]
+        self.chars = pieces.chars(piece_fmt)
         self.unique = [ self.chars[u] for u in pieces.unique_ranks ]
         self.matrix = np.array([ piece for piece in setup ]).reshape(self.H, self.W)
         self.tensor = np.array([ self.matrix == piece for piece in self.chars ]).astype(int)
@@ -38,8 +38,8 @@ class SetupBoard:
     def __str__(self) -> str:
         return ''.join(self.matrix.flatten())
 
-    def diagram(self, col_sep: str=' ') -> str:
-        return '\n'.join(col_sep.join(str(piece) for piece in row) for row in np.flip(self.matrix, axis=0))
+    def diagram(self, sep: str=' ') -> str:
+        return '\n'.join(sep.join(str(piece) for piece in row) for row in np.flip(self.matrix, axis=0))
 
     def where(self, piece: str='F') -> list:
         assert piece in self.unique

@@ -3,19 +3,17 @@
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
 
-import numpy as np
+# http://forum.stratego.com/topic/360085-data-science-tools-for-the-gravon-archive-of-stratego-games/?p=481081
+
 import pandas as pd
 
 from gravon import pieces, tidy
 
 games = pd.read_csv("../data/classic.csv").query('game_fmt == ".xml"')
 setups = tidy.setups(games.copy())
-
-# http://forum.stratego.com/topic/358733-predictability-and-bluff/?p=460634
 setups = tidy.add_board(setups)
 setups = tidy.add_WLD_score(setups)
 
-# Unpublished analysis
 colonel = pieces.names.index('colonel')
 
 setups['side_balanced_colonels'] = setups['setup_board'].apply(lambda x: x.side_sums(colonel).max() == 1)
