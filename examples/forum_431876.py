@@ -3,7 +3,7 @@
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
 
-# http://stratego-tips.blogspot.com/2017/04/top-row-open-flag-winning-game-files-at.html
+# http://forum.stratego.com/topic/357378-strategy-question-findingavoiding-bombs-at-the-end-of-games/?p=431876
 
 import pandas as pd
 
@@ -18,13 +18,13 @@ outside_wings  = [ 'a4', 'j4' ]
 inside_wings   = [ 'b4', 'i4' ]
 open_flag_front = center_squares + outside_wings + inside_wings
 
-for squares in [ center_squares, open_flag_front]:
+for squares in [ open_flag_front, center_squares ]:
     df = pattern.piece_on(setups.copy(), 'F', list(map(pattern.square2index, squares)))
     print('{}\n'.format(df.groupby('player').agg({
         'W': ['sum', 'count', 'mean']
     })))
 
-for squares in [ center_squares]:
+for squares in [ center_squares ]:
     df = pattern.piece_on(setups.copy(), 'F', list(map(pattern.square2index, squares)))
     df.query('W == True', inplace=True)
     files = df['game_id'].tolist()

@@ -3,7 +3,7 @@
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
 
-# http://stratego-tips.blogspot.com/2017/04/top-row-open-flag-winning-game-files-at.html
+# http://forum.stratego.com/topic/357414-vertical-double-bombs/?p=432201
 
 import numpy as np
 import pandas as pd
@@ -20,5 +20,5 @@ setups['bombed_off_column'] = setups['setup_board'].apply(lambda x: max(np.sum(x
 df = setups.query('bombed_off_column == True')
 df['G'] = 1
 print('{}\n'.format(df[['G', 'W', 'L', 'D']].agg(['sum'])))
-print('{}\n'.format(df.query('W == True')['game_id']))
-print('{}\n'.format(df.query('D == True')['game_id']))
+print('{}\n'.format('\n'.join(df.query('W == True')['game_id'].tolist())))
+print('{}\n'.format('\n'.join(df.query('D == True')['game_id'].tolist())))

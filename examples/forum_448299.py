@@ -3,7 +3,7 @@
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
 
-# http://stratego-tips.blogspot.com/2017/04/common-stratego-piece-placements.html
+# http://forum.stratego.com/topic/4470-top-20-common-game-setups-at-gravon-site/?p=448299
 
 import numpy as np
 import pandas as pd

@@ -3,7 +3,7 @@
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
 
-# http://forum.stratego.com/topic/4470-top-20-common-game-setups-at-gravon-site/?p=66753
+# http://forum.stratego.com/topic/357947-information-theory/?p=443363
 
 import numpy as np
 import pandas as pd
