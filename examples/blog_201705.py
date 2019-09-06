@@ -32,5 +32,6 @@ for i in [ 1, 3 ]:
     s = best_winning_percentage.iloc[i]['setup_str']
     print('{}\n'.format(stratego.SetupBoard(s).diagram()))
     df = pattern.equal(setups, s)
-    print('{}\n'.format(df['game_id']))
-    archive.make(df, s)
+    ids = df['game_id']
+    print('{}\n'.format('\n'.join(ids)))
+    archive.make(ids, s)

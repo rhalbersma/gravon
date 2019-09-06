@@ -26,5 +26,6 @@ for squares in [ center_squares, open_flag_front]:
 for squares in [ center_squares]:
     df = pattern.piece_on(setups.copy(), 'F', list(map(pattern.square2index, squares)))
     df.query('W == True', inplace=True)
-    print('{}\n'.format(df['game_id']))
-    archive.make(df, 'W_F_' + '_'.join(squares))
+    ids = df['game_id'].tolist()
+    print('{}\n'.format('\n'.join(ids)))
+    archive.make(ids, 'W_F_' + '_'.join(squares))

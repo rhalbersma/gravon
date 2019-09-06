@@ -15,5 +15,6 @@ setups = tidy.setups(games.copy(), piece_fmt)
 s = '86BBFB88584968BB7S993997B462934715695957'
 print('{}\n'.format(stratego.SetupBoard(s, piece_fmt).diagram()))
 df = pattern.equal(setups, s)
-print('{}\n'.format(df['game_id']))
-archive.make(df, s)
+ids = df['game_id'].tolist()
+print('{}\n'.format('\n'.join(ids)))
+archive.make(ids, s)

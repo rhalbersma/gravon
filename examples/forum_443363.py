@@ -44,5 +44,5 @@ setups['surprise'] = gravon_LogL - setups['LogL']
 setups.sort_values(by=['surprise'], ascending=False, inplace=True)
 setups.reset_index(drop=True, inplace=True)
 
-archive.make(setups.head(10), 'most_surprising')
-archive.make(setups.tail(10), 'least_surprising')
+archive.make(setups.head(10)['game_id'].tolist(), 'most_surprising')
+archive.make(setups.tail(10)['game_id'].tolist(), 'least_surprising')

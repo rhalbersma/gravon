@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 #          Copyright Rein Halbersma 2018-2019.
 # Distributed under the Boost Software License, Version 1.0.
