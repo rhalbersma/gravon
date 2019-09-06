@@ -3,15 +3,16 @@
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
 
+# http://forum.stratego.com/topic/2429-analyzing-game-setups/?p=38121
+
 import pandas as pd
 
 from gravon import pieces, tidy
 
 games = pd.read_csv("../data/classic.csv").query('game_fmt == ".xml"')
 setups = tidy.setups(games.copy())
-
-# http://forum.stratego.com/topic/2429-analyzing-game-setups/?p=38121
 setups = tidy.add_unique_piece_locations(setups, piece_fmt)
+
 piece, other = pieces.chars()[0], pieces.chars()[10]
 print('{} and {} starting on the same side:\n'.format(piece, other))
 print('{}\n'.format(pd.value_counts(setups['side_' + piece] == setups['side_' + other], normalize=True, sort=False)))

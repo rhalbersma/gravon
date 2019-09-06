@@ -3,6 +3,8 @@
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
 
+# http://stratego-tips.blogspot.com/2017/04/top-row-open-flag-winning-game-files-at.html
+
 import numpy as np
 import pandas as pd
 
@@ -10,8 +12,6 @@ from gravon import archive, pattern, tidy
 
 games = pd.read_csv("../data/classic.csv").query('game_fmt == ".xml"')
 setups = tidy.setups(games.copy())
-
-# http://stratego-tips.blogspot.com/2017/04/top-row-open-flag-winning-game-files-at.html
 setups = tidy.add_board(setups)
 setups = tidy.add_WLD_score(setups)
 

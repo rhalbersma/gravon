@@ -3,16 +3,17 @@
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
 
+# http://stratego-tips.blogspot.com/2017/04/common-stratego-piece-placements.html
+
 import numpy as np
 import pandas as pd
 
-from gravon import pieces, stratego, tidy
+from gravon import pieces, tidy
 
 games = pd.read_csv("../data/classic.csv").query('game_fmt == ".xml"')
 setups = tidy.setups(games.copy())
-
-# http://stratego-tips.blogspot.com/2017/04/common-stratego-piece-placements.html
 setups = tidy.add_board(setups)
+
 count, probs = setups['setup_board'].apply(lambda x: x.tensor).agg(['sum', 'mean'])
 
 np.set_printoptions(formatter={'float': '{:7.2%}'.format}, linewidth=100)
@@ -22,5 +23,5 @@ for r in list(reversed(range(1, 11))) + [ 11, 0 ]:
     print('{}\n'.format(np.flip(count[r,:,:], axis=1)))
     print('{}\n'.format(np.sum (count[r,:,:], axis=1)))
     print('{}\n'.format(np.flip(probs[r,:,:], axis=1)))
-    print('{}\n'.format(np.sum (probs[r,:,:], axis=1) / stratego.SetupBoard.counts['classic'][r]))
+    print('{}\n'.format(np.sum (probs[r,:,:], axis=1) / pieces.counts()[r]))
 np.set_printoptions()

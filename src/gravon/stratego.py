@@ -10,13 +10,6 @@ from . import pieces
 class SetupBoard:
     W, H = 10, 4
 
-    counts = {
-        'classic' : [ 1, 1, 8, 5, 4, 4, 4, 3, 2, 1, 1, 6 ],
-        'barrage' : [ 1, 1, 2, 1, 0, 0, 0, 0, 0, 1, 1, 1 ],
-        'duell'   : [ 1, 1, 2, 2, 0, 0, 0, 0, 0, 1, 1, 2 ],
-        'ultimate': [ 1, 1, 4, 2, 2, 2, 2, 1, 1, 1, 1, 2 ]
-    }
-
     lane_cols = [ list(range(0, 3)), list(range(3, 7)), list(range(7, 10)) ]
     lane_char = [ 'L', 'M', 'R' ]
     side_cols = [ list(range(0, 5)), list(range(5, 10)) ]
@@ -33,7 +26,7 @@ class SetupBoard:
         assert self.is_legal()
 
     def is_legal(self) -> bool:
-        return dict(zip(*np.unique(self.matrix, return_counts=True))) == dict(zip(self.chars, self.counts[self.game_type]))
+        return dict(zip(*np.unique(self.matrix, return_counts=True))) == dict(zip(self.chars, pieces.counts(self.game_type)))
 
     def __str__(self) -> str:
         return ''.join(self.matrix.flatten())

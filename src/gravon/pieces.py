@@ -12,6 +12,15 @@ def chars(piece_fmt: str='EU') -> list:
     }
     return switch.get(piece_fmt, piece_fmt)
 
+def counts(game_type: str='classic'):
+    switch = {
+        'classic' : [ 1, 1, 8, 5, 4, 4, 4, 3, 2, 1, 1, 6 ],
+        'barrage' : [ 1, 1, 2, 1, 0, 0, 0, 0, 0, 1, 1, 1 ],
+        'duell'   : [ 1, 1, 2, 2, 0, 0, 0, 0, 0, 1, 1, 2 ],
+        'ultimate': [ 1, 1, 4, 2, 2, 2, 2, 1, 1, 1, 1, 2 ]
+    }
+    return switch.get(game_type, game_type)
+
 def ranks(piece_fmt: str='EU') -> list:
     switch = { fmt : dict(zip(chars(piece_fmt), range(12))) for fmt in [ 'EU', 'US' ] }
     return switch.get(piece_fmt, piece_fmt)

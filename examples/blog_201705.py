@@ -3,14 +3,14 @@
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
 
+# http://stratego-tips.blogspot.com/2017/05/best-winning-percentage-stratego-game.html
+
 import pandas as pd
 
 from gravon import archive, pattern, stratego, tidy
 
 games = pd.read_csv("../data/classic.csv").query('game_fmt == ".xml"')
 setups = tidy.setups(games.copy())
-
-# http://stratego-tips.blogspot.com/2017/05/best-winning-percentage-stratego-game.html
 setups = tidy.add_WLD_score(setups)
 
 df = setups.groupby('setup_str').agg({
@@ -32,6 +32,6 @@ for i in [ 1, 3 ]:
     s = best_winning_percentage.iloc[i]['setup_str']
     print('{}\n'.format(stratego.SetupBoard(s).diagram()))
     df = pattern.equal(setups, s)
-    ids = df['game_id']
-    print('{}\n'.format('\n'.join(ids)))
-    archive.make(ids, s)
+    files = df['game_id']
+    print('{}\n'.format('\n'.join(files)))
+    archive.make(files, s)

@@ -3,6 +3,8 @@
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
 
+# http://forum.stratego.com/topic/4470-top-20-common-game-setups-at-gravon-site/?p=67241
+
 import pandas as pd
 
 from gravon import stratego, tidy
@@ -10,9 +12,8 @@ from gravon import stratego, tidy
 games = pd.read_csv("../data/classic.csv").query('game_fmt == ".xml"')
 piece_fmt = 'US'
 setups = tidy.setups(games.copy(), piece_fmt)
-
-# http://forum.stratego.com/topic/4470-top-20-common-game-setups-at-gravon-site/?p=67241
 setups = tidy.add_WLD_score(setups)
+
 df = setups.groupby('setup_str').agg({
     'W': ['sum'],
     'L': ['sum'],

@@ -6,7 +6,7 @@
 import numpy as np
 import pandas as pd
 
-from gravon import stratego, tidy
+from gravon import tidy
 
 games = pd.read_csv("../data/classic.csv").query('game_fmt == ".xml"')
 setups = tidy.setups(games.copy())

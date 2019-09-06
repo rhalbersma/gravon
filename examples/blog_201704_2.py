@@ -3,22 +3,22 @@
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
 
+# http://stratego-tips.blogspot.com/2017/04/wonloss-percentage-of-every-stratego.html
+
 import numpy as np
 import pandas as pd
 
-from gravon import pattern, pieces, stratego, tidy
+from gravon import pattern, pieces, tidy
 
 games = pd.read_csv("../data/classic.csv").query('game_fmt == ".xml"')
 setups = tidy.setups(games.copy())
-
-# http://stratego-tips.blogspot.com/2017/04/wonloss-percentage-of-every-stratego.html
 setups = tidy.add_board(setups)
 setups = tidy.add_WLD_score(setups)
 
 np.set_printoptions(formatter={'float': '{:7.2%}'.format}, linewidth=100)
-F = stratego.SetupBoard.ranks['F']
-count_W  = setups.query('W == True' )['setup_board'].apply(lambda x: x.tensor[F,:,:]).agg(['sum'])[0]
-count_WL = setups.query('D == False')['setup_board'].apply(lambda x: x.tensor[F,:,:]).agg(['sum'])[0]
+flag = pieces.names.index('flag')
+count_W  = setups.query('W == True' )['setup_board'].apply(lambda x: x.tensor[flag,:,:]).agg(['sum'])[0]
+count_WL = setups.query('D == False')['setup_board'].apply(lambda x: x.tensor[flag,:,:]).agg(['sum'])[0]
 print('Won /(Won+Loss) Percentage from Every Flag Position\n')
 print('{}\n'.format(np.flip(count_W / count_WL, axis=0)))
 np.set_printoptions()

@@ -17,6 +17,8 @@ setups = tidy.add_board(setups)
 count, probs = setups['setup_board'].apply(lambda x: x.tensor).agg(['sum', 'mean'])
 
 np.set_printoptions(formatter={'float': '{:4.3f}'.format}, linewidth=100)
+
 print('{}\n'.format(np.sum(count[pieces.unique_ranks,:,:], axis=2)))
 print('{}\n'.format(np.sum(probs[pieces.unique_ranks,:,:], axis=2)))
+
 np.set_printoptions()

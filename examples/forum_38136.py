@@ -3,14 +3,14 @@
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
 
+# http://forum.stratego.com/topic/2429-analyzing-game-setups/?p=38136
+
 import pandas as pd
 
 from gravon import pieces, tidy
 
 games = pd.read_csv("../data/classic.csv").query('game_fmt == ".xml"')
 setups = tidy.setups(games.copy())
-
-# http://forum.stratego.com/topic/2429-analyzing-game-setups/?p=38136
 setups = tidy.add_unique_piece_locations(setups)
 
 unique_pieces = [ pieces.chars()[u] for u in pieces.unique_ranks ]
