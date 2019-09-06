@@ -16,11 +16,13 @@ setups = tidy.add_board(setups)
 setups = tidy.add_WLD_score(setups)
 
 np.set_printoptions(formatter={'float': '{:7.2%}'.format}, linewidth=100)
+
 flag = pieces.names.index('flag')
 count_W  = setups.query('W == True' )['setup_board'].apply(lambda x: x.tensor[flag,:,:]).agg(['sum'])[0]
 count_WL = setups.query('D == False')['setup_board'].apply(lambda x: x.tensor[flag,:,:]).agg(['sum'])[0]
 print('Won /(Won+Loss) Percentage from Every Flag Position\n')
 print('{}\n'.format(np.flip(count_W / count_WL, axis=0)))
+
 np.set_printoptions()
 
 setups['G'] = 1
@@ -38,6 +40,7 @@ for idx in range(40):
 count, probs = setups['setup_board'].apply(lambda x: x.tensor).agg(['sum', 'mean'])
 
 np.set_printoptions(formatter={'float': '{:7.2%}'.format}, linewidth=100)
+
 for r in pieces.unique_ranks:
     count_W = setups.query('W == True')['setup_board'].apply(lambda x: x.tensor[r,:,:]).agg(['sum'])[0]
     count_D = setups.query('D == True')['setup_board'].apply(lambda x: x.tensor[r,:,:]).agg(['sum'])[0]
@@ -48,4 +51,5 @@ for r in pieces.unique_ranks:
     print('Average Score from Every {} Position\n'.format(pieces.names[r].capitalize()))
     print('Placement:\n{}\n'.format(np.flip(probs[r,:,:], axis=0)))
     print('Score:    \n{}\n'.format(np.flip(score, axis=0)))
+
 np.set_printoptions()

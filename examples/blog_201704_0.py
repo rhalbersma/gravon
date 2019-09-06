@@ -17,6 +17,7 @@ setups = tidy.add_board(setups)
 count, probs = setups['setup_board'].apply(lambda x: x.tensor).agg(['sum', 'mean'])
 
 np.set_printoptions(formatter={'float': '{:7.2%}'.format}, linewidth=100)
+
 print('The charts below show Stratego piece placements from {:,} setups.'.format(len(setups)))
 for r in list(reversed(range(1, 11))) + [ 11, 0 ]:
     print('Common Stratego {} Placement\n'.format(pieces.names[r].capitalize()))
@@ -24,4 +25,5 @@ for r in list(reversed(range(1, 11))) + [ 11, 0 ]:
     print('{}\n'.format(np.sum (count[r,:,:], axis=1)))
     print('{}\n'.format(np.flip(probs[r,:,:], axis=1)))
     print('{}\n'.format(np.sum (probs[r,:,:], axis=1) / pieces.counts()[r]))
+
 np.set_printoptions()
