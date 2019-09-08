@@ -14,7 +14,7 @@ games = pd.read_csv("../data/classic.csv").query('game_fmt == ".xml"')
 setups = tidy.setups(games.copy())
 setups = tidy.add_board(setups)
 
-count, probs = setups['setup_board'].apply(lambda x: x.tensor).agg(['sum', 'mean'])
+count, probs = setups['board'].apply(lambda x: x.tensor).agg(['sum', 'mean'])
 
 np.set_printoptions(formatter={'float': '{:5.3f}'.format}, linewidth=100)
 

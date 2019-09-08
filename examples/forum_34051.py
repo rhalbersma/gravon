@@ -15,7 +15,7 @@ setups = tidy.setups(games.copy())
 setups = setups.drop_duplicates(subset='setup_str')
 setups = tidy.add_board(setups)
 
-count, probs = setups['setup_board'].apply(lambda x: x.tensor).agg(['sum', 'mean'])
+count, probs = setups['board'].apply(lambda x: x.tensor).agg(['sum', 'mean'])
 
 np.set_printoptions(formatter={'float': '{:7.2%}'.format}, linewidth=100)
 

@@ -14,8 +14,8 @@ piece_fmt = 'US'
 setups = tidy.setups(games.copy(), piece_fmt)
 
 s = '86BBFB88584968BB7S993997B462934715695957'
-print('{}\n'.format(stratego.SetupBoard(s, piece_fmt).diagram()))
+print('{}\n'.format(stratego.StrategoSetup(s, piece_fmt).diagram()))
 df = pattern.equal(setups, s)
 files = df['game_id'].tolist()
 print('{}\n'.format('\n'.join(files)))
-archive.make(files, s)
+games.make_zip(files, s)

@@ -17,8 +17,8 @@ pd.options.display.float_format = '{:7.2%}'.format
 lanes = [('a4', 'b4'), ('e4', 'f4'), ('i4', 'j4')]
 
 for lane in lanes:
-    setups[lane[0]] = setups['setup_board'].apply(lambda x: x.square(lane[0]))
-    setups[lane[1]] = setups['setup_board'].apply(lambda x: x.square(lane[1]))
+    setups[lane[0]] = setups['board'].apply(lambda x: x.square(lane[0]))
+    setups[lane[1]] = setups['board'].apply(lambda x: x.square(lane[1]))
     setups[lane[0] + lane[1]] = setups[lane[0]] + setups[lane[1]]
 
 for lane in lanes:

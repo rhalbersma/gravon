@@ -17,9 +17,9 @@ setups = tidy.add_WLD_score(setups)
 
 np.set_printoptions(formatter={'float': '{:7.2%}'.format}, linewidth=100)
 
-flag = pieces.names.index('flag')
-count_W  = setups.query('W == True' )['setup_board'].apply(lambda x: x.tensor[flag,:,:]).agg(['sum'])[0]
-count_WL = setups.query('D == False')['setup_board'].apply(lambda x: x.tensor[flag,:,:]).agg(['sum'])[0]
+flag = pieces.names().index('flag')
+count_W  = setups.query('W == True' )['board'].apply(lambda x: x.tensor[flag,:,:]).agg(['sum'])[0]
+count_WL = setups.query('D == False')['board'].apply(lambda x: x.tensor[flag,:,:]).agg(['sum'])[0]
 print('Won /(Won+Loss) Percentage from Every Flag Position\n')
 print('{}\n'.format(np.flip(count_W / count_WL, axis=0)))
 
@@ -37,18 +37,18 @@ for idx in range(40):
     print('Win/(Win+Loss) Percentage = {:5.4f} Win/(Win+Loss+Draw) Percentage = {:5.4f}\n'.format(WWL, WWLD))
 
 # Unpublished analysis
-count, probs = setups['setup_board'].apply(lambda x: x.tensor).agg(['sum', 'mean'])
+count, probs = setups['board'].apply(lambda x: x.tensor).agg(['sum', 'mean'])
 
 np.set_printoptions(formatter={'float': '{:7.2%}'.format}, linewidth=100)
 
-for r in pieces.unique_ranks:
-    count_W = setups.query('W == True')['setup_board'].apply(lambda x: x.tensor[r,:,:]).agg(['sum'])[0]
-    count_D = setups.query('D == True')['setup_board'].apply(lambda x: x.tensor[r,:,:]).agg(['sum'])[0]
-    count_L = setups.query('L == True')['setup_board'].apply(lambda x: x.tensor[r,:,:]).agg(['sum'])[0]
+for r in pieces.unique_ranks():
+    count_W = setups.query('W == True')['board'].apply(lambda x: x.tensor[r,:,:]).agg(['sum'])[0]
+    count_D = setups.query('D == True')['board'].apply(lambda x: x.tensor[r,:,:]).agg(['sum'])[0]
+    count_L = setups.query('L == True')['board'].apply(lambda x: x.tensor[r,:,:]).agg(['sum'])[0]
     points = 1.0 * count_W + 0.5 * count_D + 0.0 * count_L
     games = count_W + count_D + count_L
     score = points / games
-    print('Average Score from Every {} Position\n'.format(pieces.names[r].capitalize()))
+    print('Average Score from Every {} Position\n'.format(pieces.names()[r].capitalize()))
     print('Placement:\n{}\n'.format(np.flip(probs[r,:,:], axis=0)))
     print('Score:    \n{}\n'.format(np.flip(score, axis=0)))
 

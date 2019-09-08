@@ -29,4 +29,4 @@ for squares in [ center_squares ]:
     df.query('W == True', inplace=True)
     files = df['game_id'].tolist()
     print('{}\n'.format('\n'.join(files)))
-    archive.make(files, 'W_F_' + '_'.join(squares))
+    games.make_zip(files, 'W_F_' + '_'.join(squares))

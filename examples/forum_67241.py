@@ -30,5 +30,5 @@ atleast10.reset_index(drop=True, inplace=True)
 frequent20 = atleast10.head(20)
 
 for t in frequent20.itertuples():
-    print('{}'.format(stratego.SetupBoard(t.setup_str, piece_fmt).diagram(sep='')))
+    print('{}'.format(stratego.StrategoSetup(t.setup_str, piece_fmt).diagram(sep='')))
     print('Wins = {} Losses = {} Ties = {} Games Played = {} Winning Percentage = {:5.2%}\n'.format(t.W, t.L, t.D, t.count, t.W / (t.W + t.L)))

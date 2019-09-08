@@ -29,5 +29,5 @@ atleast10 = df.query('count >= 10').sort_values(by=['count'], ascending=False)
 atleast10.reset_index(drop=True, inplace=True)
 
 for t in atleast10.itertuples():
-    print('{}'.format(stratego.SetupBoard(t.setup_str, piece_fmt).diagram(sep='')))
+    print('{}'.format(stratego.StrategoSetup(t.setup_str, piece_fmt).diagram(sep='')))
     print('Wins = {} Losses = {} Ties = {} Games Played = {} Winning Percentage = {:5.2%}\n'.format(t.W, t.L, t.D, t.count, t.W / (t.W + t.L)))

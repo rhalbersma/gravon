@@ -14,5 +14,5 @@ setups = tidy.setups(games.copy())
 
 top20 = setups['setup_str'].value_counts().to_frame(name='count').head(20)
 for t in top20.itertuples():
-    print('{}'.format(stratego.SetupBoard(t.Index).diagram(sep='')))
+    print('{}'.format(stratego.StrategoSetup(t.Index).diagram(sep='')))
     print(' {}\n'.format(t.count))

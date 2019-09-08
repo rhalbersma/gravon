@@ -13,7 +13,7 @@ games = pd.read_csv("../data/classic.csv").query('game_fmt == ".xml"')
 setups = tidy.setups(games.copy())
 setups = tidy.add_unique_piece_locations(setups)
 
-unique_pieces = [ pieces.chars()[u] for u in pieces.unique_ranks ]
+unique_pieces = [ pieces.chars()[u] for u in pieces.unique_ranks() ]
 for i, piece in enumerate(unique_pieces):
     for j, other in enumerate(unique_pieces):
         if i < j:

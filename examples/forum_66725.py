@@ -14,7 +14,7 @@ setups = tidy.setups(games.copy())
 setups = tidy.add_unique_piece_distances(setups)
 setups = tidy.add_WLD_score(setups)
 
-unique_pieces = [ pieces.chars()[u] for u in pieces.unique_ranks ]
+unique_pieces = [ pieces.chars()[u] for u in pieces.unique_ranks() ]
 
 for i, piece in enumerate(unique_pieces):
     for j, other in enumerate(unique_pieces):

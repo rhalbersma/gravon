@@ -8,19 +8,19 @@
 import numpy as np
 import pandas as pd
 
-from gravon import pieces, tidy
+import gravon.setup as gs
 
-games = pd.read_csv("../data/classic.csv").query('game_fmt == ".xml"')
+setups = gs.load_dataset('classic').query('game_fmt == ".xml"')
 setups = tidy.setups(games.copy())
 setups = tidy.add_board(setups)
 
-count, probs = setups['setup_board'].apply(lambda x: x.tensor).agg(['sum', 'mean'])
+count, probs = setups['board'].apply(lambda x: x.tensor).agg(['sum', 'mean'])
 
 np.set_printoptions(formatter={'float': '{:7.2%}'.format}, linewidth=100)
 
 print('The charts below show Stratego piece placements from {:,} setups.'.format(len(setups)))
 for r in list(reversed(range(1, 11))) + [ 11, 0 ]:
-    print('Common Stratego {} Placement\n'.format(pieces.names[r].capitalize()))
+    print('Common Stratego {} Placement\n'.format(pieces.names()[r].capitalize()))
     print('{}\n'.format(np.flip(count[r,:,:], axis=1)))
     print('{}\n'.format(np.sum (count[r,:,:], axis=1)))
     print('{}\n'.format(np.flip(probs[r,:,:], axis=1)))

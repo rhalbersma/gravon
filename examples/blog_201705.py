@@ -30,8 +30,8 @@ best_winning_percentage = atleast10.query('count >= 50').sort_values(by=['mean']
 
 for i in [ 1, 3 ]:
     s = best_winning_percentage.iloc[i]['setup_str']
-    print('{}\n'.format(stratego.SetupBoard(s).diagram()))
+    print('{}\n'.format(stratego.StrategoSetup(s).diagram()))
     df = pattern.equal(setups, s)
     files = df['game_id']
     print('{}\n'.format('\n'.join(files)))
-    archive.make(files, s)
+    games.make_zip(files, s)

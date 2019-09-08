@@ -9,15 +9,23 @@ from setuptools import setup, find_packages
 
 setup(
     name='gravon',
-    version='0.1.dev0',
-    description='Data science toolkit for the Gravon archive of Stratego games',
+    version='0.1.0-dev0',
+    description='Data science tools for the Gravon archive of Stratego games',
     url='https://github.com/rhalbersma/gravon',
     author='Rein Halbersma',
     license='Boost Software License 1.0 (BSL-1.0)',
     packages=find_packages(where='src'),
     package_dir={'':'src'},
+    package_data={
+        'gravon': ['data/*.pkl'],
+    },    
     install_requires=[
-        'lxml', 'numpy', 'pandas'
+        'bs4', 'lxml', 'numpy', 'pandas', 'requests'
     ],
     python_requires='>=3.6',
+    classifiers=[
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.6',
+    ],
 )
