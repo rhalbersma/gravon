@@ -22,7 +22,7 @@ class Wget:
         wget -m -nd -A acclist -P prefix urls
 
         Examples:
-            >>> gravon.utils.Wget.mirror_no_directories('*.zip', 'downloads', 'http://www.gravon.de/strados2/files/')
+            >>> Wget.mirror_no_directories('*.zip', 'downloads', 'http://www.gravon.de/strados2/files/')
         """
         os.makedirs(prefix, exist_ok=True)
         urls = collections.deque(urls)
@@ -48,7 +48,7 @@ class Wget:
         wget -P prefix urls
 
         Examples:
-            >>> gravon.utils.Wget.download('viewer', 'https://www.gravon.de/webstart/strados2/strados2.jnlp')
+            >>> Wget.download('viewer', 'https://www.gravon.de/webstart/strados2/strados2.jnlp')
         """
         os.makedirs(prefix, exist_ok=True)
         for url in urls:
@@ -61,7 +61,7 @@ class Wget:
 def extract(pattern: str, name: str, path: str) -> None:
     """
     Examples:
-        >>> gravon.utils.extract('*.zip', 'downloads', 'games')
+        >>> extract('*.zip', 'downloads', 'games')
     """
     assert os.path.isdir(name)
     os.makedirs(path, exist_ok=True)
@@ -72,8 +72,9 @@ def extract(pattern: str, name: str, path: str) -> None:
 def flatten(path: str) -> None:
     """
     Examples:
-        >>> gravon.utils.flatten('games')
+        >>> flatten('games')
     """
+    assert os.path.isdir(path)
     for dirpath, dirnames, filenames in itertools.islice(os.walk(path), 1, None):
         for f in filenames:
             shutil.move(os.path.join(dirpath, f), os.path.join(path, f))
@@ -82,25 +83,29 @@ def flatten(path: str) -> None:
             nested = os.path.join(dirpath, d)
             assert not os.listdir(nested)
             shutil.rmtree(nested)
+    assert all([ os.path.isfile(os.path.join(path, f)) for f in os.listdir(path) ])
 
 def replace(path: str, old: str, new: str) -> None:
     """
     Examples:
-        >>> gravon.utils.replace('games', ' ', '_')
+        >>> replace('games', ' ', '_')
     """
+    assert os.path.isdir(path)
     for f in os.listdir(path):
         src = os.path.join(path, f)
         os.rename(src, src.replace(old, new))
 
 def tableofcontents(path: str) -> pd.DataFrame:
+    assert os.path.isdir(path)
     toc = pd.DataFrame(
-        data=[ 
+        data=[
             os.path.splitext(os.path.basename(f))
-            for f in glob.glob(os.path.join(path, '*'))
-        ], 
-        columns=['game_id', 'game_fmt']
+            for f in os.listdir(path)
+            if os.path.isfile(os.path.join(path, f))
+        ],
+        columns=['filename', 'ext']
     )
-    toc['game_fmt'] = toc['game_fmt'].astype('category')
+    toc = toc.astype(dtype={'ext': 'category'})
     return toc
 
 class GSNParser:
@@ -173,27 +178,28 @@ class GSNParser:
             os.remove(src)
 
 def xml_parse(path: str) -> tuple:
+    assert os.path.isfile(path)
     tree = lxml.etree.parse(path)
-    game_id = os.path.splitext(os.path.basename(path))[0]
-    game_type = tree.find('.//game').attrib['type'] if not game_id.startswith('duell-') else 'duell'
+    filename = os.path.splitext(os.path.basename(path))[0]
+    game_type = tree.find('.//game').attrib['type'] if not filename.startswith('duell-') else 'duell'
     field = tree.find('.//field')
     field_content = '' if field == None else field.attrib['content']
-    game_length = len(tree.findall('.//move'))
-    name1, name2 = (p.text for p in tree.findall('.//player'))
+    moves = len(tree.findall('.//move'))
+    player_id1, player_id2 = (p.text for p in tree.findall('.//player'))
     result = tree.find('.//result')
-    result_type, winner = map(int, (result.attrib['type'], result.attrib['winner']))
-    return game_id, game_type, field_content, game_length, name1, name2, result_type, winner
+    result_type, result_winner = map(int, (result.attrib['type'], result.attrib['winner']))
+    return filename, game_type, field_content, moves, player_id1, player_id2, result_type, result_winner
 
 def create_dataset(pattern: str, path: str, toc: pd.DataFrame) -> (pd.DataFrame, pd.DataFrame):
-    data=[
-        xml_parse(f) 
-        for f in glob.glob(os.path.join(path, pattern))
-    ] 
+    assert os.path.isdir(path)
     df = pd.DataFrame(
-        data,
-        columns=['game_id', 'game_type', 'field_content', 'game_length', 'name1', 'name2', 'result_type', 'winner']
+        data=[
+            xml_parse(f)
+            for f in glob.glob(os.path.join(path, pattern))
+        ],
+        columns=['filename', 'game_type', 'field_content', 'moves', 'player_id1', 'player_id2', 'result_type', 'result_winner']
     )
-    df = df.astype(dtype={ column: 'category' for column in ['game_type', 'result_type', 'winner'] })
+    df = df.astype(dtype={column: 'category' for column in ['game_type', 'result_type', 'result_winner']})
     empty = df.query('field_content.str.len() != 100')
     df.query('field_content.str.len() == 100', inplace=True)
     df = toc.merge(df)
@@ -215,5 +221,5 @@ def save_dataset(path: str) -> None:
     pd.to_pickle(path)
 
 def load_dataset(name: str) -> pd.DataFrame:
-    path = pkg_resources.resource_filename('gravon', os.path.join('data', name + '.pkl'))
+    path = pkg_resources.resource_filename(__name__, os.path.join('data', name + '.pkl'))
     return pd.read_pickle(path)

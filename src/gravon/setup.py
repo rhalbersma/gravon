@@ -9,8 +9,8 @@ import pandas as pd
 class Piece:
     def chars(piece_fmt: str='EU') -> list:
         switch = {
-            'EU' : [ 'F' ] + [ str(i) for i in range(1, 10) ] + [ 'X', 'B' ],
-            'US' : [ 'F', 'S' ] + [ str(i) for i in reversed(range(1, 10)) ] + [ 'B' ]
+            'EU': [ 'F' ] + [ str(i) for i in range(1, 10) ] + [ 'X', 'B' ],
+            'US': [ 'F', 'S' ] + [ str(i) for i in reversed(range(1, 10)) ] + [ 'B' ]
         }
         return switch.get(piece_fmt, piece_fmt)
 
@@ -128,13 +128,13 @@ class StraDoS2Parser:
         http://www.kbs.twi.tudelft.nl/docs/MSc/2007/deBoer/thesis.pdf
         """
         self.pieces = {
-            'R' : ['M'] + [ chr(i) for i in range(ord('B') + 1, ord('M')) ] + ['B'],
-            'B' : ['Y'] + [ chr(i) for i in range(ord('N') + 1, ord('Y')) ] + ['N']
+            'R': ['M'] + [ chr(i) for i in range(ord('B') + 1, ord('M')) ] + ['B'],
+            'B': ['Y'] + [ chr(i) for i in range(ord('N') + 1, ord('Y')) ] + ['N']
         }
 
         self.decode = {
-            **{ self.pieces['R'][rank] : piece for rank, piece in enumerate(encoding) },
-            **{ self.pieces['B'][rank] : piece for rank, piece in enumerate(encoding) }
+            **{ self.pieces['R'][rank]: piece for rank, piece in enumerate(encoding) },
+            **{ self.pieces['B'][rank]: piece for rank, piece in enumerate(encoding) }
         }
 
     def parse(self, setup: str) -> str:
