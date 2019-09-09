@@ -187,7 +187,7 @@ def xml_parse(path: str) -> tuple:
     moves = len(tree.findall('.//move'))
     player_id1, player_id2 = (p.text for p in tree.findall('.//player'))
     result = tree.find('.//result')
-    result_type, result_winner = map(int, (result.attrib['type'], result.attrib['winner']))
+    result_type, result_winner = (int(r) for r in (result.attrib['type'], result.attrib['winner']))
     return filename, game_type, field_content, moves, player_id1, player_id2, result_type, result_winner
 
 def create_dataset(pattern: str, path: str, toc: pd.DataFrame) -> (pd.DataFrame, pd.DataFrame):
