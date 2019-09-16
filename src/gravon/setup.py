@@ -7,74 +7,120 @@ import numpy as np
 import pandas as pd
 
 class Piece:
-    def chars(piece_fmt: str='EU') -> list:
-        switch = {
-            'EU': [ 'F' ] + [ str(i) for i in range(1, 10) ] + [ 'X', 'B' ],
-            'US': [ 'F', 'S' ] + [ str(i) for i in reversed(range(1, 10)) ] + [ 'B' ]
-        }
-        return switch.get(piece_fmt, piece_fmt)
-
-    def counts(game_type: str='classic') -> list:
-        switch = {
-            'classic' : [ 1, 1, 8, 5, 4, 4, 4, 3, 2, 1, 1, 6 ],
-            'barrage' : [ 1, 1, 2, 1, 0, 0, 0, 0, 0, 1, 1, 1 ],
-            'duell'   : [ 1, 1, 2, 2, 0, 0, 0, 0, 0, 1, 1, 2 ],
-            'ultimate': [ 1, 1, 4, 2, 2, 2, 2, 1, 1, 1, 1, 2 ]
-        }
-        return switch.get(game_type, game_type)
-
+    @staticmethod
     def names() -> list:
+        """Return the list of piece names in ascending order of rank."""
         return [ 'flag', 'spy', 'scout', 'miner', 'sergeant', 'lieutenant', 'captain', 'major', 'colonel', 'general', 'marshal', 'bomb' ]
 
-    def ranks(piece_fmt: str='EU') -> list:
-        switch = { fmt : dict(zip(chars(piece_fmt), range(12))) for fmt in [ 'EU', 'US' ] }
-        return switch.get(piece_fmt, piece_fmt)
+    @staticmethod
+    def symbols(notation: str='EU') -> list:
+        """Return a list of piece symbols in ascending order of rank."""
+        return {
+            'EU': [ 'F', '1' ] + [ str(rank) for rank in          range(2, 10)  ] + [ 'X', 'B' ],
+            'US': [ 'F', 'S' ] + [ str(rank) for rank in reversed(range(2, 10)) ] + [ '1', 'B' ]
+        }[notation]
 
-    def translate(piece_char: str, src_fmt: str='EU', dst_fmt: str='US') -> str:
-        assert len(piece_char) == 1
-        switch = dict(zip(chars(src_fmt), chars(dst_fmt)))
-        return switch.get(piece_char, piece_char)
+    @staticmethod
+    def ranks(notation: str='EU') -> list:
+        """Return a dictionary of piece symbols and their corresponding ranks."""
+        return {
+            n: dict(zip(Piece.symbols(n), range(12)))
+            for n in [ 'EU', 'US' ]
+        }[notation]
 
-    def unique_ranks() -> list:
-        return [ 0, 1, 9, 10 ]
+vdb = """
+6225263X26
+54B1927782
+4B4785B564
+23B23BFB33
+"""
+
+vdbs = ''.join(reversed(vdb.splitlines()))
 
 class Board:
-    shape = (4, 10)
+    nrow, ncol = shape = (4, 10)
 
-    lane_cols = [ list(range(0, 3)), list(range(3, 7)), list(range(7, 10)) ]
-    lane_char = [ 'L', 'M', 'R' ]
+    row_labels = [ str(r + 1)        for r in range(nrow) ]
+    col_labels = [ chr(c + ord('a')) for c in range(ncol) ]
+
+    @staticmethod
+    def to_square(loc) -> str:
+        return Board.col_labels[loc[1]] + Board.row_labels[loc[0]]
+
+    @staticmethod
+    def rank_counts(game_type: str='classic') -> list:
+        """Return a list of piece counts in ascending order of rank for the initial setup."""
+        return {
+            'classic' : [ 1, 1, 8, 5, 4, 4, 4, 3, 2, 1, 1, 6 ],
+            'barrage' : [ 1, 1, 2, 1, 0, 0, 0, 0, 0, 1, 1, 1 ],
+            'duel'    : [ 1, 1, 2, 2, 0, 0, 0, 0, 0, 1, 1, 2 ],
+            'ultimate': [ 1, 1, 4, 2, 2, 2, 2, 1, 1, 1, 1, 2 ]
+        }[game_type]
+
+    @staticmethod
+    def unique_ranks(game_type: str='classic') -> list:
+        """Return a list of unique piece ranks in ascending order of rank for the initial setup."""
+        return {
+            gt: [
+                rank for rank in range(12)
+                if Board.rank_counts(gt)[rank] == 1
+            ]
+            for gt in [ 'classic', 'barrage', 'duel', 'ultimate' ]
+        }[game_type]
+
+    lanes = [ 'L' ] * 3 + [ 'M' ] * 4 + [ 'R' ] * 3
+
     side_cols = [ list(range(0, 5)), list(range(5, 10)) ]
     side_char = [ 'L', 'R' ]
 
-    def __init__(self, setup: str, piece_fmt: str='EU', game_type: str='classic') -> None:
-        assert len(setup) == self.Rows * self.Columns
-        self.chars = Piece.chars(piece_fmt)
-        self.unique = [ self.chars[u] for u in Piece.unique_ranks() ]
-        self.string = setup
-        self.matrix = np.array(list(self.string)).reshape(self.shape)
-        self.tensor = np.array([ self.matrix == piece for piece in self.chars ]).astype(int)
+    def __init__(self, setup: str, notation: str='EU', game_type: str='classic') -> None:
+        assert len(setup) == Board.nrow * Board.ncol
+        self.matrix = np.array([
+            Piece.ranks(notation)[symbol]
+            for symbol in setup
+        ]).reshape(Board.shape)
+        self.tensor = np.array([
+            self.matrix == rank
+            for rank in range(12)
+        ]).astype(int)
         self.game_type = game_type
         assert self.is_legal()
 
     def is_legal(self) -> bool:
-        return dict(zip(*np.unique(self.matrix, return_counts=True))) == dict(zip(self.chars, Piece.counts(self.game_type)))
+        return dict(zip(*np.unique(self.matrix, return_counts=True))) == {
+            rank: count
+            for rank in range(12)
+            for count in [ Board.rank_counts(self.game_type)[rank] ]
+            if count > 0
+        }
 
-    def __str__(self) -> str:
-        return self.string
+    def diagram(self, notation='EU', rowsep: str='\n', colsep: str=' ') -> str:
+        hborder = ' ' + colsep + '+' + (Board.ncol + (Board.ncol + 1) * len(colsep)) * '-' + '+'
+        vborder = '|'
+        return rowsep.join(
+            [ hborder ] +
+            [
+                colsep.join(
+                    [ list(reversed(Board.row_labels))[idx] ] +
+                    [ vborder ] +
+                    [ Piece.symbols(notation)[rank] for rank in row ] +
+                    [ vborder ]
+                )
+                for idx, row in enumerate(np.flip(self.matrix, axis=0))
+            ] +
+            [ hborder ] +
+            [ (2 * ' ') + (2 * colsep) + colsep.join(Board.col_labels) ]
+        )
 
-    def diagram(self, sep: str=' ') -> str:
-        return '\n'.join(sep.join(str(piece) for piece in row) for row in np.flip(self.matrix, axis=0))
+    def argwhere(self, rank: int) -> list:
+        return np.argwhere(self.tensor[rank,:,:])
 
-    def where(self, piece: str='F') -> list:
-        assert piece in self.unique
-        loc = np.argwhere(self.matrix == piece)
-        assert len(loc) == 1
-        return loc[0]
-
-    def lane(self, piece: str='F') -> str:
-        assert piece in self.unique
-        column = self.where(piece)[1]
-        return self.lane_char[ [ column in lane for lane in self.lane_cols ].index(True) ]
+    def lane(self, rank: int) -> list:
+        assert symbol in Piece.symbols(notation)
+        return [ 
+            Board.lanes[loc] 
+            for loc in np.where(self.tensor[Piece.ranks(notation)[symbol],:,:])[1] 
+        ]
 
     def side(self, piece: str='F') -> str:
         assert piece in self.unique
@@ -122,25 +168,25 @@ class Board:
             return np.array([ np.sum(s[side])           for side in self.side_cols ])
 
 class StraDoS2Parser:
+    symbols = {
+        'R': ['M'] + [ chr(i) for i in range(ord('B') + 1, ord('M')) ] + ['B'],
+        'B': ['Y'] + [ chr(i) for i in range(ord('N') + 1, ord('Y')) ] + ['N']
+    }
+
     def __init__(self, encoding: list) -> None:
         """
         page 90 of Vincent de Boer's MSc. thesis:
         http://www.kbs.twi.tudelft.nl/docs/MSc/2007/deBoer/thesis.pdf
         """
-        self.pieces = {
-            'R': ['M'] + [ chr(i) for i in range(ord('B') + 1, ord('M')) ] + ['B'],
-            'B': ['Y'] + [ chr(i) for i in range(ord('N') + 1, ord('Y')) ] + ['N']
-        }
-
         self.decode = {
-            **{ self.pieces['R'][rank]: piece for rank, piece in enumerate(encoding) },
-            **{ self.pieces['B'][rank]: piece for rank, piece in enumerate(encoding) }
+            **{ StraDoS2Parser.symbols['R'][rank]: symbol for rank, symbol in enumerate(encoding) },
+            **{ StraDoS2Parser.symbols['B'][rank]: symbol for rank, symbol in enumerate(encoding) }
         }
 
     def parse(self, setup: str) -> str:
         """Parse a 40-character setup string."""
         assert len(setup) == 40
-        return ''.join([ self.decode[piece] for piece in setup ])
+        return ''.join([ self.decode[symbol] for symbol in setup ])
 
     def __call__(self, field_content: str) -> (str, str):
         """Read a 100-character field content string and return a tuple of two parsed 40-character setup strings."""
@@ -164,5 +210,3 @@ class Pattern:
     def match(df: pd.DataFrame, pat2d: str, column: str='setup_str') -> pd.DataFrame:
         pat = board2string(pat2d)
         return df.query(column + '.str.match(@pat)')
-
-def 

@@ -17,12 +17,12 @@ import pandas as pd
 import requests
 
 class Wget:
-    def mirror_no_directories(acclist: str, prefix: str, *urls) -> None:
+    def mirror_no_directories(prefix: str, acclist: str, *urls) -> None:
         """
-        wget -m -nd -A acclist -P prefix urls
+        wget -m -nd -P prefix -A acclist urls
 
         Examples:
-            >>> Wget.mirror_no_directories('*.zip', 'downloads', 'http://www.gravon.de/strados2/files/')
+            >>> Wget.mirror_no_directories('downloads', '*.zip', 'http://www.gravon.de/strados2/files/')
         """
         os.makedirs(prefix, exist_ok=True)
         urls = collections.deque(urls)
@@ -58,10 +58,10 @@ class Wget:
             with open(os.path.join(prefix, filename), 'wb') as dst:
                 dst.write(response.content)
 
-def extract(pattern: str, name: str, path: str) -> None:
+def extract(name: str, pattern: str, path: str) -> None:
     """
     Examples:
-        >>> extract('*.zip', 'downloads', 'games')
+        >>> extract('downloads', '*.zip', 'games')
     """
     assert os.path.isdir(name)
     os.makedirs(path, exist_ok=True)
@@ -85,141 +85,131 @@ def flatten(path: str) -> None:
             shutil.rmtree(nested)
     assert all([ os.path.isfile(os.path.join(path, f)) for f in os.listdir(path) ])
 
-def replace(path: str, old: str, new: str) -> None:
-    """
-    Examples:
-        >>> replace('games', ' ', '_')
-    """
-    assert os.path.isdir(path)
-    for f in os.listdir(path):
-        src = os.path.join(path, f)
-        os.rename(src, src.replace(old, new))
+def gsn_game_type(game_type: int) -> str:
+    return {
+        0: 'classic',
+        1: 'barrage',
+        2: 'free',
+        3: 'ultimate'
+    }[game_type]
 
-def tableofcontents(path: str) -> pd.DataFrame:
-    assert os.path.isdir(path)
-    toc = pd.DataFrame(
-        data=[
-            os.path.splitext(os.path.basename(f))
-            for f in os.listdir(path)
-            if os.path.isfile(os.path.join(path, f))
-        ],
-        columns=['filename', 'ext']
-    )
-    toc = toc.astype(dtype={'ext': 'category'})
-    return toc
+def gsn_parse(path: str) -> tuple:
+    filename = os.path.basename(path)    
+    root = os.path.splitext(filename)[0].split('.')[1:]
+    date, id = '.'.join(root[:-1]), int(root[-1])
+    with open(path, 'r') as src:
+        # header opening
+        line = src.readline().strip()
+        assert line[:-1] == '#X38FA11 Stratego-Notation v'
+        assert int(line[-1]) in range(1, 3)
 
-class GSNParser:
-    def xml_game_type(gsn_game_type: int) -> str:
-        return {
-            0: 'classic',
-            1: 'barrage',
-            2: 'classicfree',
-            3: 'ultimate lightning'
-        }.get(gsn_game_type, gsn_game_type)
+        # game type
+        line = src.readline().strip()
+        assert line.startswith('type')
+        game_type = gsn_game_type(int(line[-1]))
 
-    def parse(self, path) -> None:
-        root = os.path.splitext(path)[0]
-        with open(root + '.gsn', 'r') as src, open(root + '.xml', 'w') as dst:
-            # header opening
-            line = src.readline().strip()
-            assert line[:-1] == '#X38FA11 Stratego-Notation v'
-            assert int(line[-1]) in range(1, 3)
-            print('<?xml version="1.0" encoding="UTF-8"?>', file=dst)
-            print('<stratego>', file=dst)
+        # field content
+        last_line = src.tell()
+        line = src.readline().strip()
+        if line == 'END':
+            # undo reading the current line if the game ended before the setup phase had been completed
+            src.seek(last_line)
+            field_content = ''
+        else:
+            assert len(line) == 100
+            field_content = line
 
-            # game type
-            line = src.readline().strip()
-            assert line.startswith('type')
-            gsn_game_type = int(line[-1])
-            assert gsn_game_type in range(4)
-            print(' <game type = "{}">'.format(xml_game_type(gsn_game_type)), file=dst)
-            print(file=dst)
-
-            # field content
-            last_line = src.tell()
+        # moves
+        moves = 0
+        while True:
             line = src.readline().strip()
             if line == 'END':
-                # undo reading the current line if the game ended before the setup phase had been completed
-                src.seek(last_line)
-            else:
-                assert len(line) == 100
-                print('  <field content="{}"/>'.format(line), file=dst)
+                break
+            assert len(line) == 5
+            if line[2] == ':':
+                # bug report pending for rescue moves in Ultimate Lightning (private communication on 2019-06-16)
+                continue
+            moves += 1
 
-            # moves
-            id = 0
-            while True:
-                line = src.readline().strip()
-                if line == 'END':
-                    break
-                assert len(line) == 5
-                if line[2] == ':':
-                    # bug report pending for rescue moves in Ultimate Lightning (private communication on 2019-06-16)
-                    continue
-                id += 1
-                source, target = line.split('-')
-                print('  <move id="{}" source="{}" target="{}"/>'.format(id, source, target), file=dst)
+        # result
+        line = src.readline().strip()
+        players, result = line.split(' result ')
+        player_id1, player_id2 = players.split(' vs ')
+        result_type, result_winner = result.split(' winner ')
 
-            # result
-            line = src.readline().strip()
-            players, result = line.split(' result ')
-            player1, player2 = players.split(' vs ')
-            type, winner = result.split(' winner ')
-            print('  <player id ="1">{}</player>'.format(player1), file=dst)
-            print('  <player id ="2">{}</player>'.format(player2), file=dst)
-            print('  <result type="{}" winner="{}"/>'.format(type, int(winner) + 1), file=dst)
+    return filename, game_type, date, id, field_content, moves, player_id1, player_id2, result_type, result_winner
 
-            # header closing
-            print(' </game>', file=dst)
-            print('</stratego>', file=dst)
-
-    def __call__(self, sources):
-        for src in sources:
-            gsn2xml(src)
-            os.remove(src)
+def xml_game_type(game_type: str) -> str:
+    return {
+        'classic'           : 'classic',
+        'barrage'           : 'barrage',
+        'classicfree'       : 'free',
+        'ultimate lightning': 'ultimate',
+        'duell'             : 'duel'
+    }[game_type]
 
 def xml_parse(path: str) -> tuple:
     assert os.path.isfile(path)
     tree = lxml.etree.parse(path)
-    filename = os.path.splitext(os.path.basename(path))[0]
-    game_type = tree.find('.//game').attrib['type'] if not filename.startswith('duell-') else 'duell'
+    filename = os.path.basename(path)    
+    root = os.path.splitext(filename)[0].split('-')[1:]
+    date, id = root[0], int(root[1])
+    game_type = xml_game_type(tree.find('.//game').attrib['type'])
     field = tree.find('.//field')
     field_content = '' if field == None else field.attrib['content']
     moves = len(tree.findall('.//move'))
     player_id1, player_id2 = (p.text for p in tree.findall('.//player'))
     result = tree.find('.//result')
     result_type, result_winner = (int(r) for r in (result.attrib['type'], result.attrib['winner']))
-    return filename, game_type, field_content, moves, player_id1, player_id2, result_type, result_winner
+    return filename, game_type, date, id, field_content, moves, player_id1, player_id2, result_type, result_winner
 
-def create_dataset(pattern: str, path: str, toc: pd.DataFrame) -> (pd.DataFrame, pd.DataFrame):
+def to_frame(path: str, pattern: str, parser) -> pd.DataFrame:
     assert os.path.isdir(path)
-    df = pd.DataFrame(
+    return pd.DataFrame(
         data=[
-            xml_parse(f)
+            parser(f)
             for f in glob.glob(os.path.join(path, pattern))
         ],
-        columns=['filename', 'game_type', 'field_content', 'moves', 'player_id1', 'player_id2', 'result_type', 'result_winner']
+        columns=['filename', 'game_type', 'date', 'id', 'field_content', 'moves', 'player_id1', 'player_id2', 'result_type', 'result_winner']
     )
-    df = df.astype(dtype={column: 'category' for column in ['game_type', 'result_type', 'result_winner']})
-    empty = df.query('field_content.str.len() != 100')
-    df.query('field_content.str.len() == 100', inplace=True)
-    df = toc.merge(df)
-    if empty.shape[0]:
-        empty = toc.merge(empty)
-    return df, empty
 
 def init_datasets(downloads_dir: str='downloads', games_dir: str='games') -> pd.DataFrame:
-    #Wget.mirror_no_directories('*.zip', downloads_dir, 'http://www.gravon.de/strados2/files/')
-    extract('*.zip', downloads_dir, games_dir)
+    Wget.mirror_no_directories(downloads_dir, '*.zip', 'http://www.gravon.de/strados2/files/')
+    extract(downloads_dir, '*.zip', games_dir)
     flatten(games_dir)
-    replace(games_dir, ' ', '_')
-    toc = tableofcontents(games_dir)
-    #GSNParser()(glob.glob(os.path.join(games_dir, '*.gsn')))
-    df = create_dataset('*.xml', games_dir, toc)
+    df = pd.concat([
+        to_frame(games_dir, '*.gsn', gsn_parse),
+        to_frame(games_dir, '*.xml', xml_parse)
+    ])
+    df = df.astype(dtype={column: 'category' for column in ['game_type', 'result_type', 'result_winner']})
+    df.sort_values(by=['game_type', 'date', 'id'], inplace=True)
     return df
 
-def save_dataset(path: str) -> None:
-    pd.to_pickle(path)
+def save_dataset(df: pd.DataFrame, name: str) -> None:
+    path = pkg_resources.resource_filename(__name__, os.path.join('data', name + '.pkl'))
+    df.to_pickle(path)
 
 def load_dataset(name: str) -> pd.DataFrame:
     path = pkg_resources.resource_filename(__name__, os.path.join('data', name + '.pkl'))
     return pd.read_pickle(path)
+
+def download_daily_results(year, month, day) -> pd.DataFrame:
+    url = 'http://www.gravon.de/gravon/stratego/todays.jsp?year={}&month={}&day={}'.format(year, month, day)
+    response = requests.get(url)
+    assert response.status_code == 200
+    soup = bs4.BeautifulSoup(response.content, 'lxml')
+    table = soup.find_all('table', {'width': '95%', 'align': 'center'})[1]
+    df = pd.read_html(str(table), header=0)[0]
+    df.columns = df.columns.str.replace(' ', '_')
+    return df
+
+def download_monthly_results(year, month) -> pd.DataFrame:
+    return pd.concat([ download_daily_results(year, month, day) for day in range(1, 29) ])
+
+def download_kleier_tournament(eid: int) -> pd.DataFrame:
+    url = 'https://www.kleier.net/cgi/tourn_table.php?eid={}'.format(eid)
+    response = requests.get(url)
+    assert response.status_code == 200
+    soup = bs4.BeautifulSoup(response.content, 'lxml')
+    tables = soup.find_all('table')
+    return [ pd.read_html(str(table))[0].head(-1) for table in tables ]
