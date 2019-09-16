@@ -131,11 +131,12 @@ def gsn_parse(path: str) -> tuple:
                 continue
             moves += 1
 
-        # result
+        # players and result
         line = src.readline().strip()
         players, result = line.split(' result ')
         player_id1, player_id2 = players.split(' vs ')
-        result_type, result_winner = result.split(' winner ')
+        result_type, result_winner = (int(r) for r in result.split(' winner '))
+        result_winner += 1
 
     return filename, game_type, date, id, field_content, moves, player_id1, player_id2, result_type, result_winner
 
