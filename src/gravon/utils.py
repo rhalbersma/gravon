@@ -65,8 +65,8 @@ def extract(name: str, pattern: str, path: str) -> None:
     """
     assert os.path.isdir(name)
     os.makedirs(path, exist_ok=True)
-    for f in glob.glob(os.path.join(name, pattern)):
-        with zipfile.ZipFile(f) as src:
+    for file in glob.glob(os.path.join(name, pattern)):
+        with zipfile.ZipFile(file) as src:
             src.extractall(path)
 
 def flatten(path: str) -> None:
@@ -76,17 +76,20 @@ def flatten(path: str) -> None:
     """
     assert os.path.isdir(path)
     for dirpath, dirnames, filenames in itertools.islice(os.walk(path), 1, None):
-        for f in filenames:
-            shutil.move(os.path.join(dirpath, f), os.path.join(path, f))
+        for filename in filenames:
+            shutil.move(os.path.join(dirpath, filename), os.path.join(path, filename))
     for dirpath, dirnames, filenames in os.walk(path):
         for d in dirnames:
             nested = os.path.join(dirpath, d)
             assert not os.listdir(nested)
             shutil.rmtree(nested)
-    assert all([ os.path.isfile(os.path.join(path, f)) for f in os.listdir(path) ])
+    assert all([
+        os.path.isfile(os.path.join(path, basename))
+        for basename in os.listdir(path)
+    ])
 
 def gsn_parser(path: str) -> tuple:
-    filename = os.path.basename(path)    
+    filename = os.path.basename(path)
     root = os.path.splitext(filename)[0].split('.')[1:]
     date, id = '.'.join(root[:-1]), int(root[-1])
     with open(path, 'r') as src:
@@ -140,7 +143,7 @@ def gsn_parser(path: str) -> tuple:
 def xml_parser(path: str) -> tuple:
     assert os.path.isfile(path)
     tree = lxml.etree.parse(path)
-    filename = os.path.basename(path)    
+    filename = os.path.basename(path)
     root = os.path.splitext(filename)[0].split('-')[1:]
     date, id = root[0], int(root[1])
     game_type = {
@@ -198,7 +201,10 @@ def download_daily_results(year, month, day) -> pd.DataFrame:
     return df
 
 def download_monthly_results(year, month) -> pd.DataFrame:
-    return pd.concat([ download_daily_results(year, month, day) for day in range(1, 29) ])
+    return pd.concat([
+        download_daily_results(year, month, day)
+        for day in range(1, 29)
+    ])
 
 def download_kleier_tournament(eid: int) -> pd.DataFrame:
     url = f'https://www.kleier.net/cgi/tourn_table.php?eid={eid}'

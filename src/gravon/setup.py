@@ -16,8 +16,8 @@ class Piece:
     def symbols(notation: str='EU') -> list:
         """Return a list of piece symbols in ascending order of rank."""
         return {
-            'EU': [ 'F', '1' ] + [ str(rank) for rank in          range(2, 10)  ] + [ 'X', 'B' ],
-            'US': [ 'F', 'S' ] + [ str(rank) for rank in reversed(range(2, 10)) ] + [ '1', 'B' ]
+            'EU': [ 'F', '1' ] + [ str(rank) for rank in          range(2, 10)  ] + [ 'X', 'B', '.', '#' ],
+            'US': [ 'F', 'S' ] + [ str(rank) for rank in reversed(range(2, 10)) ] + [ '1', 'B', '.', '#' ]
         }[notation]
 
     @staticmethod
@@ -40,8 +40,8 @@ vdbs = ''.join(reversed(vdb.splitlines()))
 class Board:
     nrow, ncol = shape = (4, 10)
 
-    row_labels = [ str(r + 1)        for r in range(nrow) ]
-    col_labels = [ chr(c + ord('a')) for c in range(ncol) ]
+    row_labels = [ str(row + 1)        for row in range(nrow) ]
+    col_labels = [ chr(col + ord('a')) for col in range(ncol) ]
 
     @staticmethod
     def to_square(loc) -> str:
@@ -51,10 +51,10 @@ class Board:
     def rank_counts(game_type: str='classic') -> list:
         """Return a list of piece counts in ascending order of rank for the initial setup."""
         return {
-            'classic' : [ 1, 1, 8, 5, 4, 4, 4, 3, 2, 1, 1, 6 ],
-            'barrage' : [ 1, 1, 2, 1, 0, 0, 0, 0, 0, 1, 1, 1 ],
-            'duel'    : [ 1, 1, 2, 2, 0, 0, 0, 0, 0, 1, 1, 2 ],
-            'ultimate': [ 1, 1, 4, 2, 2, 2, 2, 1, 1, 1, 1, 2 ]
+            'classic' : [ 1, 1, 8, 5, 4, 4, 4, 3, 2, 1, 1, 6,  0, 0 ],
+            'barrage' : [ 1, 1, 2, 1, 0, 0, 0, 0, 0, 1, 1, 1, 32, 0 ],
+            'duel'    : [ 1, 1, 2, 2, 0, 0, 0, 0, 0, 1, 1, 2, 30, 0 ],
+            'ultimate': [ 1, 1, 4, 2, 2, 2, 2, 1, 1, 1, 1, 2, 20, 0 ]
         }[game_type]
 
     @staticmethod
@@ -73,12 +73,9 @@ class Board:
     side_cols = [ list(range(0, 5)), list(range(5, 10)) ]
     side_char = [ 'L', 'R' ]
 
-    def __init__(self, setup: str, notation: str='EU', game_type: str='classic') -> None:
-        assert len(setup) == Board.nrow * Board.ncol
-        self.matrix = np.array([
-            Piece.ranks(notation)[symbol]
-            for symbol in setup
-        ]).reshape(Board.shape)
+    def __init__(self, placement: list, game_type: str='classic') -> None:
+        assert len(placement) == Board.nrow * Board.ncol
+        self.matrix = np.array(placement).reshape(Board.shape)
         self.tensor = np.array([
             self.matrix == rank
             for rank in range(12)
@@ -89,7 +86,7 @@ class Board:
     def is_legal(self) -> bool:
         return dict(zip(*np.unique(self.matrix, return_counts=True))) == {
             rank: count
-            for rank in range(12)
+            for rank in range(14)
             for count in [ Board.rank_counts(self.game_type)[rank] ]
             if count > 0
         }
@@ -117,9 +114,9 @@ class Board:
 
     def lane(self, rank: int) -> list:
         assert symbol in Piece.symbols(notation)
-        return [ 
-            Board.lanes[loc] 
-            for loc in np.where(self.tensor[Piece.ranks(notation)[symbol],:,:])[1] 
+        return [
+            Board.lanes[loc]
+            for loc in np.where(self.tensor[Piece.ranks(notation)[symbol],:,:])[1]
         ]
 
     def side(self, piece: str='F') -> str:
@@ -167,33 +164,45 @@ class Board:
         else:
             return np.array([ np.sum(s[side])           for side in self.side_cols ])
 
-class StraDoS2Parser:
-    symbols = {
-        'R': ['M'] + [ chr(i) for i in range(ord('B') + 1, ord('M')) ] + ['B'],
-        'B': ['Y'] + [ chr(i) for i in range(ord('N') + 1, ord('Y')) ] + ['N']
-    }
-
-    def __init__(self, encoding: list) -> None:
+class StraDoS2:
+    @staticmethod
+    def symbols(color: str) -> list:
         """
         page 90 of Vincent de Boer's MSc. thesis:
         http://www.kbs.twi.tudelft.nl/docs/MSc/2007/deBoer/thesis.pdf
         """
-        self.decode = {
-            **{ StraDoS2Parser.symbols['R'][rank]: symbol for rank, symbol in enumerate(encoding) },
-            **{ StraDoS2Parser.symbols['B'][rank]: symbol for rank, symbol in enumerate(encoding) }
-        }
+        return {
+            'R': ['M'] + [ chr(i) for i in range(ord('B') + 1, ord('M')) ] + ['B'],
+            'B': ['Y'] + [ chr(i) for i in range(ord('N') + 1, ord('Y')) ] + ['N']
+        }[color]
 
-    def parse(self, setup: str) -> str:
-        """Parse a 40-character setup string."""
-        assert len(setup) == 40
-        return ''.join([ self.decode[symbol] for symbol in setup ])
+    @staticmethod
+    def decode(symbol: str) -> int:
+        return {
+            **{
+                StraDoS2.symbols(color)[rank]: rank
+                for color in ('R', 'B')
+                for rank in range(12)
+            },
+            **{
+                'A': 12,
+                '_': 13
+            }
+        }[symbol]
 
-    def __call__(self, field_content: str) -> (str, str):
-        """Read a 100-character field content string and return a tuple of two parsed 40-character setup strings."""
+    @staticmethod
+    def parse(setup: str) -> list:
+        """Parse a string of piece symbols."""
+        return [
+            StraDoS2.decode(symbol)
+            for symbol in setup
+        ]
+
+    @staticmethod
+    def split(field_content: str) -> (str, str):
+        """Read a 100-character field content string and return a tuple of two 40-character setup strings."""
         assert len(field_content) == 100
-        setup_R = self.parse(field_content[:40]      )
-        setup_B = self.parse(field_content[60:][::-1])
-        return setup_R, setup_B
+        return field_content[:40], field_content[60:][::-1]
 
 class Pattern:
     def board2string(pat2d: str) -> str:
