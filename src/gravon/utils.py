@@ -66,8 +66,8 @@ def extract(name: str, pattern: str, path: str) -> None:
     assert os.path.isdir(name)
     os.makedirs(path, exist_ok=True)
     for f in glob.glob(os.path.join(name, pattern)):
-        with zipfile.ZipFile(f) as r:
-            r.extractall(path)
+        with zipfile.ZipFile(f) as src:
+            src.extractall(path)
 
 def flatten(path: str) -> None:
     """
@@ -85,15 +85,7 @@ def flatten(path: str) -> None:
             shutil.rmtree(nested)
     assert all([ os.path.isfile(os.path.join(path, f)) for f in os.listdir(path) ])
 
-def gsn_game_type(game_type: int) -> str:
-    return {
-        0: 'classic',
-        1: 'barrage',
-        2: 'free',
-        3: 'ultimate'
-    }[game_type]
-
-def gsn_parse(path: str) -> tuple:
+def gsn_parser(path: str) -> tuple:
     filename = os.path.basename(path)    
     root = os.path.splitext(filename)[0].split('.')[1:]
     date, id = '.'.join(root[:-1]), int(root[-1])
@@ -106,7 +98,12 @@ def gsn_parse(path: str) -> tuple:
         # game type
         line = src.readline().strip()
         assert line.startswith('type')
-        game_type = gsn_game_type(int(line[-1]))
+        game_type = {
+            0: 'classic',
+            1: 'barrage',
+            2: 'free',
+            3: 'ultimate'
+        }[int(line[-1])]
 
         # field content
         last_line = src.tell()
@@ -140,22 +137,19 @@ def gsn_parse(path: str) -> tuple:
 
     return filename, game_type, date, id, field_content, moves, player_id1, player_id2, result_type, result_winner
 
-def xml_game_type(game_type: str) -> str:
-    return {
-        'classic'           : 'classic',
-        'barrage'           : 'barrage',
-        'classicfree'       : 'free',
-        'ultimate lightning': 'ultimate',
-        'duell'             : 'duel'
-    }[game_type]
-
-def xml_parse(path: str) -> tuple:
+def xml_parser(path: str) -> tuple:
     assert os.path.isfile(path)
     tree = lxml.etree.parse(path)
     filename = os.path.basename(path)    
     root = os.path.splitext(filename)[0].split('-')[1:]
     date, id = root[0], int(root[1])
-    game_type = xml_game_type(tree.find('.//game').attrib['type'])
+    game_type = {
+        'classic'           : 'classic',
+        'barrage'           : 'barrage',
+        'classicfree'       : 'free',
+        'ultimate lightning': 'ultimate',
+        'duell'             : 'duel'
+    }[tree.find('.//game').attrib['type']]
     field = tree.find('.//field')
     field_content = '' if field == None else field.attrib['content']
     moves = len(tree.findall('.//move'))
@@ -167,10 +161,7 @@ def xml_parse(path: str) -> tuple:
 def to_frame(path: str, pattern: str, parser) -> pd.DataFrame:
     assert os.path.isdir(path)
     return pd.DataFrame(
-        data=[
-            parser(f)
-            for f in glob.glob(os.path.join(path, pattern))
-        ],
+        data=[parser(file) for file in glob.glob(os.path.join(path, pattern))],
         columns=['filename', 'game_type', 'date', 'id', 'field_content', 'moves', 'player_id1', 'player_id2', 'result_type', 'result_winner']
     )
 
@@ -179,23 +170,25 @@ def init_datasets(downloads_dir: str='downloads', games_dir: str='games') -> pd.
     extract(downloads_dir, '*.zip', games_dir)
     flatten(games_dir)
     df = pd.concat([
-        to_frame(games_dir, '*.gsn', gsn_parse),
-        to_frame(games_dir, '*.xml', xml_parse)
+        to_frame(games_dir, '*.gsn', gsn_parser),
+        to_frame(games_dir, '*.xml', xml_parser)
     ])
     df = df.astype(dtype={column: 'category' for column in ['game_type', 'result_type', 'result_winner']})
     df.sort_values(by=['game_type', 'date', 'id'], inplace=True)
+    df.reset_index(drop=True, inplace=True)
     return df
 
+def get_resource(basename: str) -> str:
+    return pkg_resources.resource_filename(__name__, os.path.join('data', basename))
+
 def save_dataset(df: pd.DataFrame, name: str) -> None:
-    path = pkg_resources.resource_filename(__name__, os.path.join('data', name + '.pkl'))
-    df.to_pickle(path)
+    df.to_pickle(get_resource(name + '.pkl'))
 
 def load_dataset(name: str) -> pd.DataFrame:
-    path = pkg_resources.resource_filename(__name__, os.path.join('data', name + '.pkl'))
-    return pd.read_pickle(path)
+    return pd.read_pickle(get_resource(name + '.pkl'))
 
 def download_daily_results(year, month, day) -> pd.DataFrame:
-    url = 'http://www.gravon.de/gravon/stratego/todays.jsp?year={}&month={}&day={}'.format(year, month, day)
+    url = f'http://www.gravon.de/gravon/stratego/todays.jsp?year={year}&month={month}&day={day}'
     response = requests.get(url)
     assert response.status_code == 200
     soup = bs4.BeautifulSoup(response.content, 'lxml')
@@ -208,7 +201,7 @@ def download_monthly_results(year, month) -> pd.DataFrame:
     return pd.concat([ download_daily_results(year, month, day) for day in range(1, 29) ])
 
 def download_kleier_tournament(eid: int) -> pd.DataFrame:
-    url = 'https://www.kleier.net/cgi/tourn_table.php?eid={}'.format(eid)
+    url = f'https://www.kleier.net/cgi/tourn_table.php?eid={eid}'
     response = requests.get(url)
     assert response.status_code == 200
     soup = bs4.BeautifulSoup(response.content, 'lxml')
