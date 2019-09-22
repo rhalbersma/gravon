@@ -6,27 +6,8 @@
 import numpy as np
 import pandas as pd
 
-class Piece:
-    @staticmethod
-    def names() -> list:
-        """Return the list of piece names in ascending order of rank."""
-        return [ 'flag', 'spy', 'scout', 'miner', 'sergeant', 'lieutenant', 'captain', 'major', 'colonel', 'general', 'marshal', 'bomb' ]
-
-    @staticmethod
-    def symbols(notation: str='EU') -> list:
-        """Return a list of piece symbols in ascending order of rank."""
-        return {
-            'EU': [ 'F', '1' ] + [ str(rank) for rank in          range(2, 10)  ] + [ 'X', 'B', '.', '#' ],
-            'US': [ 'F', 'S' ] + [ str(rank) for rank in reversed(range(2, 10)) ] + [ '1', 'B', '.', '#' ]
-        }[notation]
-
-    @staticmethod
-    def ranks(notation: str='EU') -> list:
-        """Return a dictionary of piece symbols and their corresponding ranks."""
-        return {
-            n: dict(zip(Piece.symbols(n), range(12)))
-            for n in [ 'EU', 'US' ]
-        }[notation]
+from . import piece
+from . import strados2
 
 vdb = """
 6225263X26
@@ -68,7 +49,7 @@ class Board:
             for gt in [ 'classic', 'barrage', 'duel', 'ultimate' ]
         }[game_type]
 
-    lanes = [ 'L' ] * 3 + [ 'M' ] * 4 + [ 'R' ] * 3
+    lanes = 3 * [ 'L' ] + 4 * [ 'M' ] + 3 * [ 'R' ]
 
     side_cols = [ list(range(0, 5)), list(range(5, 10)) ]
     side_char = [ 'L', 'R' ]
@@ -77,19 +58,22 @@ class Board:
         assert len(placement) == Board.nrow * Board.ncol
         self.matrix = np.array(placement).reshape(Board.shape)
         self.tensor = np.array([
-            self.matrix == rank
-            for rank in range(12)
+            self.matrix % piece.nrank == rank
+            for rank in range(piece.nrank)
         ]).astype(int)
         self.game_type = game_type
         assert self.is_legal()
 
     def is_legal(self) -> bool:
-        return dict(zip(*np.unique(self.matrix, return_counts=True))) == {
-            rank: count
-            for rank in range(14)
+        return dict(zip(*np.unique(self.matrix % piece.nrank, return_counts=True))) == {
+            rank % piece.nrank: count
+            for rank in range(piece.nrank)
             for count in [ Board.rank_counts(self.game_type)[rank] ]
             if count > 0
         }
+
+    def __str__(self) -> str:
+        return strados2.generate(self.matrix.flatten())
 
     def diagram(self, notation='EU', rowsep: str='\n', colsep: str=' ') -> str:
         hborder = ' ' + colsep + '+' + (Board.ncol + (Board.ncol + 1) * len(colsep)) * '-' + '+'
@@ -100,7 +84,7 @@ class Board:
                 colsep.join(
                     [ list(reversed(Board.row_labels))[idx] ] +
                     [ vborder ] +
-                    [ Piece.symbols(notation)[rank] for rank in row ] +
+                    [ piece.symbols[notation][rank] for rank in row ] +
                     [ vborder ]
                 )
                 for idx, row in enumerate(np.flip(self.matrix, axis=0))
@@ -109,100 +93,61 @@ class Board:
             [ (2 * ' ') + (2 * colsep) + colsep.join(Board.col_labels) ]
         )
 
-    def argwhere(self, rank: int) -> list:
-        return np.argwhere(self.tensor[rank,:,:])
+    # def argwhere(self, rank: int) -> list:
+    #     return np.argwhere(self.tensor[rank,:,:])
 
-    def lane(self, rank: int) -> list:
-        assert symbol in Piece.symbols(notation)
-        return [
-            Board.lanes[loc]
-            for loc in np.where(self.tensor[Piece.ranks(notation)[symbol],:,:])[1]
-        ]
+    # def lane(self, rank: int) -> list:
+    #     assert symbol in Piece.symbols(notation)
+    #     return [
+    #         Board.lanes[loc]
+    #         for loc in np.where(self.tensor[Piece.ranks(notation)[symbol],:,:])[1]
+    #     ]
 
-    def side(self, piece: str='F') -> str:
-        assert piece in self.unique
-        column = self.where(piece)[1]
-        return self.side_char[ [ column in side for side in self.side_cols ].index(True) ]
+    # def side(self, piece: str='F') -> str:
+    #     assert piece in self.unique
+    #     column = self.where(piece)[1]
+    #     return self.side_char[ [ column in side for side in self.side_cols ].index(True) ]
 
-    def mirror(self) -> Board:
-        self.matrix = np.flip(self.matrix, axis=1)
-        return self
+    # def mirror(self) -> Board:
+    #     self.matrix = np.flip(self.matrix, axis=1)
+    #     return self
 
-    def canonical(self, dst_side: str='L', piece: str='F') -> Board:
-        assert piece in self.unique
-        src_side = self.side(piece)
-        return (self, True) if dst_side == src_side else (self.mirror(), False)
+    # def canonical(self, dst_side: str='L', piece: str='F') -> Board:
+    #     assert piece in self.unique
+    #     src_side = self.side(piece)
+    #     return (self, True) if dst_side == src_side else (self.mirror(), False)
 
-    def square(self, sq: str) -> str:
-        row = ord(sq[1]) - ord('1')
-        col = ord(sq[0]) - ord('a')
-        return self.matrix[row, col]
+    # def square(self, sq: str) -> str:
+    #     row = ord(sq[1]) - ord('1')
+    #     col = ord(sq[0]) - ord('a')
+    #     return self.matrix[row, col]
 
-    def row_sums(self, rank: int=None) -> np.array:
-        if rank == None:
-            return np.sum(self.tensor, axis=2)
-        else:
-            return np.sum(self.tensor[rank,:,:], axis=1)
+    # def row_sums(self, rank: int=None) -> np.array:
+    #     if rank == None:
+    #         return np.sum(self.tensor, axis=2)
+    #     else:
+    #         return np.sum(self.tensor[rank,:,:], axis=1)
 
-    def col_sums(self, rank: int=None) -> np.array:
-        if rank == None:
-            return np.sum(self.tensor, axis=1)
-        else:
-            return np.sum(self.tensor[rank,:,:], axis=0)
+    # def col_sums(self, rank: int=None) -> np.array:
+    #     if rank == None:
+    #         return np.sum(self.tensor, axis=1)
+    #     else:
+    #         return np.sum(self.tensor[rank,:,:], axis=0)
 
-    def lane_sums(self, rank: int=None) -> np.array:
-        s = self.col_sums(rank)
-        if rank == None:
-            return np.array([ np.sum(s[:,lane], axis=1) for lane in self.lane_cols ]).transpose()
-        else:
-            return np.array([ np.sum(s[lane])           for lane in self.lane_cols ])
+    # def lane_sums(self, rank: int=None) -> np.array:
+    #     s = self.col_sums(rank)
+    #     if rank == None:
+    #         return np.array([ np.sum(s[:,lane], axis=1) for lane in self.lane_cols ]).transpose()
+    #     else:
+    #         return np.array([ np.sum(s[lane])           for lane in self.lane_cols ])
 
-    def side_sums(self, rank: int=None) -> np.array:
-        s = self.col_sums(rank)
-        if rank == None:
-            return np.array([ np.sum(s[:,side], axis=1) for side in self.side_cols ]).transpose()
-        else:
-            return np.array([ np.sum(s[side])           for side in self.side_cols ])
+    # def side_sums(self, rank: int=None) -> np.array:
+    #     s = self.col_sums(rank)
+    #     if rank == None:
+    #         return np.array([ np.sum(s[:,side], axis=1) for side in self.side_cols ]).transpose()
+    #     else:
+    #         return np.array([ np.sum(s[side])           for side in self.side_cols ])
 
-class StraDoS2:
-    @staticmethod
-    def symbols(color: str) -> list:
-        """
-        page 90 of Vincent de Boer's MSc. thesis:
-        http://www.kbs.twi.tudelft.nl/docs/MSc/2007/deBoer/thesis.pdf
-        """
-        return {
-            'R': ['M'] + [ chr(i) for i in range(ord('B') + 1, ord('M')) ] + ['B'],
-            'B': ['Y'] + [ chr(i) for i in range(ord('N') + 1, ord('Y')) ] + ['N']
-        }[color]
-
-    @staticmethod
-    def decode(symbol: str) -> int:
-        return {
-            **{
-                StraDoS2.symbols(color)[rank]: rank
-                for color in ('R', 'B')
-                for rank in range(12)
-            },
-            **{
-                'A': 12,
-                '_': 13
-            }
-        }[symbol]
-
-    @staticmethod
-    def parse(setup: str) -> list:
-        """Parse a string of piece symbols."""
-        return [
-            StraDoS2.decode(symbol)
-            for symbol in setup
-        ]
-
-    @staticmethod
-    def split(field_content: str) -> (str, str):
-        """Read a 100-character field content string and return a tuple of two 40-character setup strings."""
-        assert len(field_content) == 100
-        return field_content[:40], field_content[60:][::-1]
 
 class Pattern:
     def board2string(pat2d: str) -> str:
