@@ -7,7 +7,27 @@ import bs4
 import pandas as pd
 import requests
 
-def download_daily_results(year, month, day) -> pd.DataFrame:
+def player0(nick: str) -> pd.DataFrame:
+    url = f'http://www.gravon.de/gravon/stratego/player0.jsp?nick={nick}'
+    response = requests.get(url)
+    assert response.status_code == 200
+    soup = bs4.BeautifulSoup(response.content, 'lxml')
+    table = soup.find_all('table', {'width': '90%', 'align': 'center'})[0]
+    df = pd.read_html(str(table), header=0)[0]
+    df.columns = df.columns.str.replace(' ', '_')
+    return df
+
+def pvsp(nick1: str, nick2: str) -> pd.DataFrame:
+    url = f'http://www.gravon.de/gravon/stratego/pvsp.jsp?nick1={nick1}&nick2={nick2}'
+    response = requests.get(url)
+    assert response.status_code == 200
+    soup = bs4.BeautifulSoup(response.content, 'lxml')
+    table = soup.find_all('table', {'width': '95%', 'align': 'center', 'border': '0'})[1]
+    df = pd.read_html(str(table), header=0)[0]
+    df.columns = df.columns.str.replace(' ', '_')
+    return df
+
+def todays(year, month, day) -> pd.DataFrame:
     url = f'http://www.gravon.de/gravon/stratego/todays.jsp?year={year}&month={month}&day={day}'
     response = requests.get(url)
     assert response.status_code == 200
@@ -17,9 +37,9 @@ def download_daily_results(year, month, day) -> pd.DataFrame:
     df.columns = df.columns.str.replace(' ', '_')
     return df
 
-def download_monthly_results(year, month) -> pd.DataFrame:
+def monthly(year, month) -> pd.DataFrame:
     return pd.concat([
-        download_daily_results(year, month, day)
+        todays(year, month, day)
         for day in range(1, 29)
     ])
 

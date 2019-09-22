@@ -11,13 +11,13 @@ import gravon.strados2
 import gravon.utils
 import gravon.wget
 
-def init_games(downloads_dir: str='downloads', games_dir: str='games') -> pd.DataFrame:
+def init_games(downloads_dir: str='downloads/gravon', games_dir: str='games/gravon') -> pd.DataFrame:
     gravon.wget.mirror_no_directories(downloads_dir, '*.zip', 'http://www.gravon.de/strados2/files/')
     gravon.utils.extract(downloads_dir, '*.zip', games_dir)
     gravon.utils.flatten(games_dir)
     df = pd.concat([
-        to_frame(games_dir, '*.gsn', gravon.strados2.gsn_parser),
-        to_frame(games_dir, '*.xml', gravon.strados2.xml_parser)
+        gravon.strados2.to_frame(games_dir, '*.gsn', gravon.strados2.gsn_parser),
+        gravon.strados2.to_frame(games_dir, '*.xml', gravon.strados2.xml_parser)
     ])
     df = df.astype(dtype={column: 'category' for column in ['game_type', 'result_type', 'result_winner']})
     df.sort_values(by=['game_type', 'date', 'id'], inplace=True)

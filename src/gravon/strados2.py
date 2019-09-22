@@ -6,13 +6,15 @@
 # page 90 of Vincent de Boer's MSc. thesis:
 # http://www.kbs.twi.tudelft.nl/docs/MSc/2007/deBoer/thesis.pdf
 
+import glob
 import os
 
 import lxml.etree
+import pandas as pd
 
 symbols = \
     [ 'M' ] + [ chr(i) for i in range(ord('B') + 1, ord('M')) ] + [ 'B' ] + \
-    [ 'A', '_' ] +  \
+    [ 'A', '_' ] + \
     [ 'Y' ] + [ chr(i) for i in range(ord('N') + 1, ord('Y')) ] + [ 'N' ]
 
 ranks = { 
@@ -39,11 +41,20 @@ def generate(placement: list) -> str:
         for rank in placement
     ])
 
-def gsn_parser(path: str) -> tuple:
+def encode(setup: str, encoding: list) -> str:
+    """Encode a string of symbols."""
+    return ''.join([
+        encoding[rank]
+        for rank in parse(setup)
+    ])
+
+def gsn_parser(path: str, date_id=True) -> tuple:
     filename = os.path.basename(path)
-    root = os.path.splitext(filename)[0].split('.')[1:]
-    date, id = '.'.join(root[:-1]), int(root[-1])
-    with open(path, 'r') as src:
+    date = id = None
+    if date_id:
+        root = os.path.splitext(filename)[0].split('.')[1:]
+        date, id = '.'.join(root[:-1]), int(root[-1])
+    with open(path, 'r', encoding='utf-8-sig') as src:
         # header opening
         line = src.readline().strip()
         assert line[:-1] == '#X38FA11 Stratego-Notation v'
@@ -91,12 +102,14 @@ def gsn_parser(path: str) -> tuple:
 
     return filename, game_type, date, id, field_content, moves, player_id1, player_id2, result_type, result_winner
 
-def xml_parser(path: str) -> tuple:
+def xml_parser(path: str, date_id=True) -> tuple:
     assert os.path.isfile(path)
     tree = lxml.etree.parse(path)
     filename = os.path.basename(path)
-    root = os.path.splitext(filename)[0].split('-')[1:]
-    date, id = root[0], int(root[1])
+    date = id = None
+    if date_id:
+        root = os.path.splitext(filename)[0].split('-')[1:]
+        date, id = root[0], int(root[1])
     game_type = {
         'classic'           : 'classic',
         'barrage'           : 'barrage',
@@ -111,3 +124,10 @@ def xml_parser(path: str) -> tuple:
     result = tree.find('.//result')
     result_type, result_winner = (int(r) for r in (result.attrib['type'], result.attrib['winner']))
     return filename, game_type, date, id, field_content, moves, player_id1, player_id2, result_type, result_winner
+
+def to_frame(path: str, pattern: str, parser) -> pd.DataFrame:
+    assert os.path.isdir(path)
+    return pd.DataFrame(
+        data=[parser(file) for file in glob.glob(os.path.join(path, pattern))],
+        columns=['filename', 'game_type', 'date', 'id', 'field_content', 'moves', 'player_id1', 'player_id2', 'result_type', 'result_winner']
+    )

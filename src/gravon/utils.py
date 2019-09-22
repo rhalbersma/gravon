@@ -42,14 +42,6 @@ def flatten(path: str) -> None:
         for basename in os.listdir(path)
     ])
 
-
-def to_frame(path: str, pattern: str, parser) -> pd.DataFrame:
-    assert os.path.isdir(path)
-    return pd.DataFrame(
-        data=[parser(file) for file in glob.glob(os.path.join(path, pattern))],
-        columns=['filename', 'game_type', 'date', 'id', 'field_content', 'moves', 'player_id1', 'player_id2', 'result_type', 'result_winner']
-    )
-
 def get_resource(basename: str) -> str:
     return pkg_resources.resource_filename(__name__, os.path.join('data', basename))
 
