@@ -5,8 +5,6 @@
 
 import pandas as pd
 
-import gravon.piece
-import gravon.setup
 import gravon.strados2
 import gravon.utils
 import gravon.wget

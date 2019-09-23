@@ -53,7 +53,9 @@ def gsn_parser(path: str, date_id=True) -> tuple:
     date = id = None
     if date_id:
         root = os.path.splitext(filename)[0].split('.')[1:]
-        date, id = '.'.join(root[:-1]), int(root[-1])
+        assert len(root[:-1]) == 3
+        date = '-'.join(root[:-1])
+        id = int(root[-1])
     with open(path, 'r', encoding='utf-8-sig') as src:
         # header opening
         line = src.readline().strip()
@@ -109,7 +111,12 @@ def xml_parser(path: str, date_id=True) -> tuple:
     date = id = None
     if date_id:
         root = os.path.splitext(filename)[0].split('-')[1:]
-        date, id = root[0], int(root[1])
+        year, month = (int(t) for t in root[0].split('.'))
+        if month == 0:
+            year -= 1
+            month = 12
+        date = '-'.join([str(year), str(month).zfill(2)])
+        id = int(root[1])
     game_type = {
         'classic'           : 'classic',
         'barrage'           : 'barrage',

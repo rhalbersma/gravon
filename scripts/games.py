@@ -11,8 +11,8 @@ import gravon.strados2
 import gravon.utils
 import gravon.wget
 
-def init_games(downloads_dir: str='downloads/gravon', games_dir: str='games/gravon') -> pd.DataFrame:
-    gravon.wget.mirror_no_directories(downloads_dir, '*.zip', 'http://www.gravon.de/strados2/files/')
+def init_games(downloads_dir='downloads/gravon', games_dir='games/gravon') -> pd.DataFrame:
+    #gravon.wget.mirror_no_directories(downloads_dir, '*.zip', 'http://www.gravon.de/strados2/files/')
     gravon.utils.extract(downloads_dir, '*.zip', games_dir)
     gravon.utils.flatten(games_dir)
     df = pd.concat([
