@@ -1,15 +1,16 @@
-# build environment
+# virtual environment
 .env/
-.vscode/
 
-# self-generated
-archives/
-downloads/
-games/
-viewer/
+# setuptools generated
+*.egg-info
 
 # Python generated
-build/
-dist/
-src/*.egg-info
-src/gravon/__pycache__
+__pycache__
+
+# Jupyter generated
+.ipynb_checkpoints
+
+# self-generated
+games/
+results/
+

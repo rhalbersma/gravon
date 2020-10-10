@@ -1,4 +1,4 @@
-#          Copyright Rein Halbersma 2018-2019.
+#          Copyright Rein Halbersma 2018-2020.
 # Distributed under the Boost Software License, Version 1.0.
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
@@ -6,8 +6,7 @@
 import numpy as np
 import pandas as pd
 
-from . import piece
-from . import strados2
+import gravon.piece
 
 vdb = """
 6225263X26
@@ -21,7 +20,7 @@ vdbs = ''.join(reversed(vdb.splitlines()))
 class Board:
     nrow, ncol = shape = (4, 10)
 
-    row_labels = [ str(row + 1)        for row in range(nrow) ]
+    row_labels = [ str(row +        1) for row in range(nrow) ]
     col_labels = [ chr(col + ord('a')) for col in range(ncol) ]
 
     @staticmethod
@@ -33,9 +32,9 @@ class Board:
         """Return a list of piece counts in ascending order of rank for the initial setup."""
         return {
             'classic' : [ 1, 1, 8, 5, 4, 4, 4, 3, 2, 1, 1, 6,  0, 0 ],
-            'barrage' : [ 1, 1, 2, 1, 0, 0, 0, 0, 0, 1, 1, 1, 32, 0 ],
+            'ultimate': [ 1, 1, 4, 2, 2, 2, 2, 1, 1, 1, 1, 2, 20, 0 ],
             'duel'    : [ 1, 1, 2, 2, 0, 0, 0, 0, 0, 1, 1, 2, 30, 0 ],
-            'ultimate': [ 1, 1, 4, 2, 2, 2, 2, 1, 1, 1, 1, 2, 20, 0 ]
+            'barrage' : [ 1, 1, 2, 1, 0, 0, 0, 0, 0, 1, 1, 1, 32, 0 ]
         }[game_type]
 
     @staticmethod
