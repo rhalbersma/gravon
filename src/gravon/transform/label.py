@@ -62,29 +62,29 @@ def index(parsed: pd.DataFrame) -> pd.DataFrame:
             'next_move': _player
         })
         .astype(dtype={
-            'gid'        : 'int32',
-            'url'        : 'category',
-            'zip_name'   : 'category',
-            'zip_date'   : pd.CategoricalDtype(ordered=True),
-            'txt_date'   : pd.CategoricalDtype(ordered=True),
-            # filename   : object
-            'prefix'     : 'category',
-            # period     : object
-            'freq'       : 'category',
-            'no'         : 'int32',
-            'ext'        : 'category',
-            'type'       : pd.CategoricalDtype(categories=_type.values()),
-            'player_red' : 'category',
-            'player_blue': 'category',
-            'result'     : pd.CategoricalDtype(categories=_result.values()),
-            'ending'     : pd.CategoricalDtype(categories=_ending.values()),
-            'num_moves'  : 'int16',
-            'num_turns'  : pd.CategoricalDtype(categories=_num_turns.values()),
-            'next_move'  : pd.CategoricalDtype(categories=_player.values())
-            # field_content : object
+            'gid'          : 'int32',
+            'url'          : 'category',
+            'name'         : 'category',
+            'last_modified': pd.CategoricalDtype(ordered=True),
+            'date'         : pd.CategoricalDtype(ordered=True),
+            # filename     : object
+            'prefix'       : 'category',
+            # period       : object
+            'freq'         : 'category',
+            'no'           : 'int32',
+            'ext'          : 'category',
+            'type'         : pd.CategoricalDtype(categories=_type.values()),
+            'player_red'   : 'category',
+            'player_blue'  : 'category',
+            'result'       : pd.CategoricalDtype(categories=_result.values()),
+            'ending'       : pd.CategoricalDtype(categories=_ending.values()),
+            'num_moves'    : 'int16',
+            'num_turns'    : pd.CategoricalDtype(categories=_num_turns.values()),
+            'next_move'    : pd.CategoricalDtype(categories=_player.values())
+            # field_content: object
         })
         .loc[:,[
-            'gid', 'url', 'zip_name', 'zip_date', 'txt_date', 'filename' , 'prefix', 'period', 'freq', 'no', 'ext',
+            'gid', 'url', 'name', 'last_modified', 'date', 'filename' , 'prefix', 'period', 'freq', 'no', 'ext',
             'type', 'player_red', 'player_blue', 'result', 'ending', 'num_moves', 'num_turns', 'next_move', 'field_content'
         ]]
     )

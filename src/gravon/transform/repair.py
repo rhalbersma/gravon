@@ -9,10 +9,11 @@ from typing import Callable, List, Tuple
 import lxml.etree
 import pandas as pd
 from tqdm import tqdm
+from typing import Optional
 
 import gravon.package as pkg
 
-def _gsn(filename: str) -> Tuple[str, int]:
+def _gsn(filename: str) -> Tuple[Optional[str], Optional[int]]:
     path = osp.join(pkg.txt_dir, filename)
     with open(path, 'r', encoding='utf-8-sig') as file:
         lines = file.read().splitlines()
@@ -42,15 +43,15 @@ def _gsn(filename: str) -> Tuple[str, int]:
         return None, None
 
     with open(path, 'w') as file:
-        file.writelines(
+        file.writelines([
             line + '\n'
             for line in lines
-        )
+        ])
 
     error_code = error3 * 4 + error2 * 2 + error1 * 1
     return filename, error_code
 
-def _xml(filename: str) -> Tuple[str, int]:
+def _xml(filename: str) -> Tuple[Optional[str], Optional[int]]:
     path = osp.join(pkg.txt_dir, filename)
     tree = lxml.etree.parse(path)
 

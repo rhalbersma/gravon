@@ -22,7 +22,7 @@ def _etiget(url: str, crawl_delay=0, headers={'User-agent': 'Custom'}, **kwargs)
     time.sleep(crawl_delay)
     return requests.get(url, headers=headers, **kwargs)
 
-def _fetch_list(url: str) -> pd.DataFrame:
+def _list_directory_contents(url: str) -> pd.DataFrame:
     response = _etiget(url)
     assert response.status_code == 200
     soup = bs4.BeautifulSoup(response.content, 'lxml')
@@ -32,23 +32,25 @@ def _fetch_list(url: str) -> pd.DataFrame:
         .head(-1)
         .tail(-2)
         .reset_index(drop=True)
-        .assign(URL = url)
-        .loc[:, ['URL', 'Name', 'Last modified']]
         .rename(columns=lambda c: c.lower())
         .rename(columns=lambda c: c.replace(' ', '_'))
-        .assign(last_modified = lambda r: r.last_modified.dt.date)
-        .sort_values(['last_modified', 'name'])
-        .reset_index(drop=True)
+        .assign(
+            url           = url,
+            last_modified = lambda r: r.last_modified.dt.date
+        )
+        .loc[:, [
+            'url', 'name', 'last_modified'
+        ]]
     )
 
-def _fetch_list_recursive(url: str) -> pd.DataFrame:
+def list_directory_contents_recursive(url: str) -> pd.DataFrame:
     isdir = 'name.str.endswith("/")'
     isfile = '~' + isdir
     result = pd.DataFrame()
     dirs = pd.DataFrame(data=[''], columns=['name'])
     while True:
         list = pd.concat([
-            _fetch_list(os.path.join(url, dir.name))
+            _list_directory_contents(os.path.join(url, dir.name))
             for dir in dirs.itertuples()
         ])
         result = result.append(list.query(isfile))
@@ -60,7 +62,7 @@ def _fetch_list_recursive(url: str) -> pd.DataFrame:
         .reset_index(drop=True)
     )
 
-def _fetch_copy(source: str, directory: str) -> None:
+def _copy(source: str, directory: str) -> None:
     response = _etiget(source)
     assert response.status_code == 200
     assert os.path.exists(directory)
@@ -72,29 +74,23 @@ def download(prefix: str, *urls: str) -> None:
     wget -P prefix urls
 
     Example:
-        >>> scrape.download(pkg.games_dir, f'{pkg.gravon_url}/webstart/strados2/strados2.jnlp')
+        >>> scrape.download(pkg.games_dir, pgk.player_url)
     """
     os.makedirs(prefix, exist_ok=True)
     for url in urls:
-        _fetch_copy(url, prefix)
+        _copy(url, prefix)
 
-def mirror_no_directories(prefix: str, acclist: str, *urls) -> pd.DataFrame:
+def mirror_no_directories(prefix: str, acclist: str, directory_contents: pd.DataFrame) -> pd.DataFrame:
     """
     wget -m -nd -P prefix -A acclist urls
 
     Example:
-        >>> scrape.mirror_no_directories(pkg.zip_dir, '*.zip', f'{pkg.gravon_url}/strados2/files/')
+        >>> scrape.mirror_no_directories(pkg.zip_dir, '*.zip', pkg.strados2_url)
     """
-    files = (pd
-        .concat([
-            _fetch_list_recursive(url)
-            for url in urls
-        ])
-        .query('name.str.endswith(@acclist.split(".")[-1])')
-    )
+    files = directory_contents.query('name.str.endswith(@acclist.split(".")[-1])')
     os.makedirs(prefix, exist_ok=True)
     for file in tqdm(files.itertuples(), total=files.shape[0]):
-        _fetch_copy(os.path.join(file.url, file.name), prefix)
+        _copy(os.path.join(file.url, file.name), prefix)
     return files
 
 def _table(url: str, selector: str) -> pd.DataFrame:

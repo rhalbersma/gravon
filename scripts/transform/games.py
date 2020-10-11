@@ -10,16 +10,16 @@ import gravon.transform.label  as label
 
 txt_files = pkg.load_dataset('txt_files')
 
-if 'repaired' in pkg.get_dataset_names():
+try:
     repaired = pkg.load_dataset('repaired')
-else:
+except:
     repaired = repair.directory(txt_files)
     pkg.save_dataset(repaired, 'repaired')
 
-if all((df in pkg.get_dataset_names() for df in ('parsed_index', 'parsed_games'))):
+try:
     parsed_index = pkg.load_dataset('parsed_index')
     parsed_games = pkg.load_dataset('parsed_games')
-else:
+except:
     parsed_index, parsed_games = parse.index_games(txt_files)
     pkg.save_dataset(parsed_index, 'parsed_index')
     pkg.save_dataset(parsed_games, 'parsed_games')

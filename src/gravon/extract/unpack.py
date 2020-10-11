@@ -11,22 +11,22 @@ import pandas as pd
 
 import gravon.package as pkg
 
-def infolist(zip_name: str) -> pd.DataFrame:
+def infolist(name: str) -> pd.DataFrame:
     return (pd
         .DataFrame(
             data=[
-                (zip_name, osp.basename(mem.filename), dt.datetime(*mem.date_time).date())
-                for mem in zf.ZipFile(osp.join(pkg.zip_dir, zip_name)).infolist()
+                (name, osp.basename(mem.filename), dt.datetime(*mem.date_time).date())
+                for mem in zf.ZipFile(osp.join(pkg.zip_dir, name)).infolist()
                 if not mem.is_dir()
             ],
             columns=[
-                'zip_name', 'filename', 'txt_date'
+                'name', 'filename', 'date'
             ]
         )
     )
 
-def extractall(zip_name: str, path: str) -> None:
-    with zf.ZipFile(osp.join(pkg.zip_dir, zip_name)) as src:
+def extractall(name: str, path: str) -> None:
+    with zf.ZipFile(osp.join(pkg.zip_dir, name)) as src:
         for mem in src.infolist():
             if not mem.is_dir():
                 mem.filename = osp.basename(mem.filename)

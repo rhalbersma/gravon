@@ -15,72 +15,83 @@ import gravon.extract.scrape as scrape
 import gravon.extract.unpack as unpack
 
 if 'strados2.jnlp' not in os.listdir(pkg.games_dir):
-    scrape.download(pkg.games_dir, 'https://www.gravon.de/webstart/strados2/strados2.jnlp')
+    scrape.download(pkg.games_dir, pkg.player_url)
 
-if 'zip_files' in pkg.get_dataset_names():
-    zip_files = pkg.load_dataset('zip_files')
-else:
-    zip_files = (scrape
-        .mirror_no_directories(pkg.zip_dir, '*.zip', 'http://www.gravon.de/strados2/files/')
-        .rename(columns={
-            'name'         : 'zip_name',
-            'last_modified': 'zip_date'
-        })
+zip_files_remote = scrape.list_directory_contents_recursive(pkg.strados2_url)
+try:
+    zip_files_local = pkg.load_dataset('zip_files')
+except:
+    os.makedirs(pkg.zip_dir)
+    zip_files_local = pd.DataFrame(columns=zip_files_remote.columns.values)
+assert sorted(zip_files_local.name) == sorted(os.listdir(pkg.zip_dir))
+download_queue = (pd
+    .merge(
+        zip_files_remote, zip_files_local, 
+        how='outer', indicator=True, validate='one_to_one'
     )
+    .query('_merge == "left_only"')
+    .drop(columns='_merge')
+)
+downloaded = scrape.mirror_no_directories(pkg.zip_dir, '*.zip', download_queue)
+zip_files = zip_files_remote
+if not downloaded.empty:
     pkg.save_dataset(zip_files, 'zip_files')
+assert sorted(zip_files.name) == sorted(os.listdir(pkg.zip_dir))
 
-if 'txt_files' in pkg.get_dataset_names():
-    txt_files = pkg.load_dataset('txt_files')
-else:
-    txt_files = (zip_files
-        .merge(pd
-            .concat([
-                unpack.infolist(row.zip_name)
+txt_files = (zip_files
+    .merge(pd
+        .concat([
+                unpack.infolist(row.name)
                 for row in zip_files.itertuples()
-            ]),
-            how='left', on='zip_name', validate='one_to_many'
-        )
-        .reset_index(drop=True)
-        .assign(
-            splitext  = lambda r: r.filename.apply(lambda x: os.path.splitext(x)),
-            root      = lambda r: r.splitext.apply(lambda x: x[0]),
-            splitroot = lambda r: r.apply(lambda x: re.split(r'[-.]', x.root), axis=1),
-            prefix    = lambda r: r.splitroot.apply(lambda x: x[0]),
-            type      = lambda r: r.prefix,
-            period    = lambda r: r.splitroot.apply(lambda x: '-'.join(
-                np.where(
-                    x[2] == '0', 
-                    [ str(int(x[1]) - 1), '12' ] + x[3:-1], # transform 20xy-0 to 20xz-12 with z = y - 1
-                    [ x[1], str(x[2]).zfill(2) ] + x[3:-1]  # transform 20xy-z to 20xy-0z if z < 10
-                )
-            )),
-            freq = lambda r: r.period.apply(lambda x: np.where(len(x) == 10, 'D', 'M')),
-            no   = lambda r: r.splitroot.apply(lambda x: int(x[-1])),
-            ext  = lambda r: r.splitext.apply(lambda x: x[1])
-        )
-        .replace({'type': {                
-            'classic'           : 0,
-            'barrage'           : 1,
-            'freesetup'         : 2,
-            'classicfree'       : 2,
-            'ultimate'          : 3,
-            'ultimate lightning': 3,
-            'duell'             : 4
-        }})
-        .drop(columns=['splitext', 'root', 'splitroot'])
-        .sort_values(['type', 'period', 'no'])
-        .reset_index(drop=True)
-        .reset_index()
-        .rename(columns={'index': 'gid'})
-        .loc[:, [
-            'gid', 'url', 'zip_name', 'zip_date', 'txt_date', 'filename', 'prefix', 'type', 'period', 'freq', 'no', 'ext'
-        ]]        
+            ],
+            ignore_index=True
+        ),
+        how='left', on='name', validate='one_to_many'
     )
-    pkg.save_dataset(txt_files, 'txt_files')
+    .reset_index(drop=True)
+    .assign(
+        splitext  = lambda r: r.filename.apply(lambda x: os.path.splitext(x)),
+        root      = lambda r: r.splitext.apply(lambda x: x[0]),
+        splitroot = lambda r: r.apply(lambda x: re.split(r'[-.]', x.root), axis=1),
+        prefix    = lambda r: r.splitroot.apply(lambda x: x[0]),
+        type      = lambda r: r.prefix,
+        period    = lambda r: r.splitroot.apply(lambda x: '-'.join(
+            np.where(
+                x[2] == '0', 
+                [ str(int(x[1]) - 1), '12' ] + x[3:-1], # transform 20xy-0 to 20xz-12 with z = y - 1
+                [ x[1], str(x[2]).zfill(2) ] + x[3:-1]  # transform 20xy-z to 20xy-0z if z < 10
+            )
+        )),
+        freq = lambda r: r.period.apply(lambda x: np.where(len(x) == 10, 'D', 'M')),
+        no   = lambda r: r.splitroot.apply(lambda x: int(x[-1])),
+        ext  = lambda r: r.splitext.apply(lambda x: x[1])
+    )
+    .replace({'type': {                
+        'classic'           : 0,
+        'barrage'           : 1,
+        'freesetup'         : 2,
+        'classicfree'       : 2,
+        'ultimate'          : 3,
+        'ultimate lightning': 3,
+        'duell'             : 4
+    }})
+    .drop(columns=['splitext', 'root', 'splitroot'])
+    .sort_values(['type', 'period', 'no'])
+    .reset_index(drop=True)
+    .reset_index()
+    .rename(columns={'index': 'gid'})
+    .loc[:, [
+        'gid', 'url', 'name', 'last_modified', 'date', 'filename', 'prefix', 'type', 'period', 'freq', 'no', 'ext'
+    ]]        
+)
+pkg.save_dataset(txt_files, 'txt_files')
 
-for row in tqdm(zip_files.itertuples(), total=zip_files.shape[0]):
-    unpack.extractall(row.zip_name, pkg.txt_dir)
+if sorted(txt_files.filename) != sorted(os.listdir(pkg.txt_dir)):
+    for row in tqdm(zip_files.itertuples(), total=zip_files.shape[0]):
+        unpack.extractall(row.name, pkg.txt_dir)
 
-if 'repaired' in pkg.get_dataset_names():
+try:
     pkg.remove_dataset('repaired')
+except:
+    pass
 
