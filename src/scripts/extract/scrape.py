@@ -80,14 +80,14 @@ def download(prefix: str, *urls: str) -> None:
     for url in urls:
         _copy(url, prefix)
 
-def mirror_no_directories(prefix: str, acclist: str, directory_contents: pd.DataFrame) -> pd.DataFrame:
+def mirror_no_directories(prefix: str, acclist: str, urls: pd.DataFrame) -> pd.DataFrame:
     """
     wget -m -nd -P prefix -A acclist urls
 
     Example:
-        >>> scrape.mirror_no_directories(pkg.zip_dir, '*.zip', pkg.strados2_url)
+        >>> scrape.mirror_no_directories(pkg.zip_dir, '*.zip', list_directory_contents_recursive(pkg.strados2_url))
     """
-    files = directory_contents.query('name.str.endswith(@acclist.split(".")[-1])')
+    files = urls.query('name.str.endswith(@acclist.split(".")[-1])')
     os.makedirs(prefix, exist_ok=True)
     for file in tqdm(files.itertuples(), total=files.shape[0]):
         _copy(os.path.join(file.url, file.name), prefix)

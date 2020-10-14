@@ -1,9 +1,12 @@
-#          Copyright Rein Halbersma 2018-2019.
+#          Copyright Rein Halbersma 2018-2020.
 # Distributed under the Boost Software License, Version 1.0.
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
 
-import pandas as pd
+import gravon.wget as wget
+
+wget.mirror_no_directories('games/zip', '*.zip', 'http://www.gravon.de/strados2/files/')
+wget.download('games/player', 'https://www.gravon.de/webstart/strados2/strados2.jnlp')
 
 import gravon.piece
 import gravon.setup

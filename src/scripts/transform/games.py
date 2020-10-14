@@ -8,10 +8,12 @@ import re
 
 import numpy as np
 
-import gravon.package          as pkg
-import gravon.transform.repair as repair
-import gravon.transform.parse  as parse
-import gravon.transform.label  as label
+import gravon.package as pkg
+
+import scripts.extract.games as games
+import scripts.transform.repair as repair
+import scripts.transform.parse  as parse
+import scripts.transform.label  as label
 
 txt_files = (pkg
     .load_dataset('txt_files')
@@ -51,12 +53,6 @@ txt_files = (pkg
         'gid', 'url', 'name', 'last_modified', 'modified', 'filename', 'prefix', 'type', 'period', 'freq', 'no', 'ext'
     ]]        
 )
-
-try:
-    repaired = pkg.load_dataset('repaired')
-except:
-    repaired = repair.directory(txt_files)
-    pkg.save_dataset(repaired, 'repaired')
 
 try:
     parsed_index = pkg.load_dataset('parsed_index')

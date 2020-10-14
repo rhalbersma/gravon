@@ -11,10 +11,8 @@ import pandas as pd
 from tqdm import tqdm
 from typing import Optional
 
-import gravon.package as pkg
-
-def _gsn(filename: str) -> Tuple[Optional[str], Optional[int]]:
-    path = osp.join(pkg.txt_dir, filename)
+def _gsn(dirname: str, basename: str) -> Tuple[Optional[str], Optional[int]]:
+    path = osp.join(dirname, basename)
     with open(path, 'r', encoding='utf-8-sig') as file:
         lines = file.read().splitlines()
 
@@ -49,10 +47,10 @@ def _gsn(filename: str) -> Tuple[Optional[str], Optional[int]]:
         ])
 
     error_code = error3 * 4 + error2 * 2 + error1 * 1
-    return filename, error_code
+    return basename, error_code
 
-def _xml(filename: str) -> Tuple[Optional[str], Optional[int]]:
-    path = osp.join(pkg.txt_dir, filename)
+def _xml(dirname: str, basename: str) -> Tuple[Optional[str], Optional[int]]:
+    path = osp.join(dirname, basename)
     tree = lxml.etree.parse(path)
 
     error1 = False
@@ -82,15 +80,15 @@ def _xml(filename: str) -> Tuple[Optional[str], Optional[int]]:
         )
 
     error_code = error3 * 4 + error2 * 2 + error1 * 1
-    return filename, error_code
+    return basename, error_code
 
-def _subset(files: pd.DataFrame, repairer: Callable[[str], Tuple[str, int]]) -> List[Tuple[str, int]]:
+def _subset(dirname: str, files: pd.DataFrame, repairer: Callable[[str, str], Tuple[str, int]]) -> List[Tuple[str, int]]:
     return [
-        repairer(row.filename)
+        repairer(dirname, row.filename)
         for row in tqdm(files.itertuples(), total=files.shape[0])
     ]
 
-def directory(files: pd.DataFrame) -> pd.DataFrame:
+def directory(dirname: str, files: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(
         data=[
             (filename, error_code)
@@ -98,7 +96,7 @@ def directory(files: pd.DataFrame) -> pd.DataFrame:
                 ('.gsn', _gsn),
                 ('.xml', _xml)
             ] 
-            for filename, error_code in _subset(files.query('ext == @ext'), repairer)
+            for filename, error_code in _subset(dirname, files.query('filename.str.endswith(@ext)'), repairer)
             if filename and error_code  # filter out files that were already clean
         ],
         columns=[

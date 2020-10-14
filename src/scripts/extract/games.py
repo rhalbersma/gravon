@@ -4,14 +4,17 @@
 #          http://www.boost.org/LICENSE_1_0.txt)
 
 import os
+from typing import Tuple
 
 import pandas as pd
 
-import gravon.package        as pkg
-import gravon.extract.scrape as scrape
-import gravon.extract.unpack as unpack
+import gravon.package as pkg
 
-def get_zip_files() -> pd.DataFrame:
+import scripts.extract.scrape as scrape
+import scripts.extract.unpack as unpack
+import scripts.extract.repair as repair
+
+def get_zip_files() -> Tuple[pd.DataFrame, pd.DataFrame]:
     zip_files_remote = scrape.list_directory_contents_recursive(pkg.strados2_url)
     try:
         zip_files_cached = pkg.load_dataset('zip_files')
@@ -19,7 +22,7 @@ def get_zip_files() -> pd.DataFrame:
         os.makedirs(pkg.zip_dir)
         zip_files_cached = pd.DataFrame(columns=zip_files_remote.columns.values)
     assert sorted(os.listdir(pkg.zip_dir)) == sorted(zip_files_cached.name)
-    scrape_queue = (pd
+    zip_queue = (pd
         .merge(
             zip_files_remote, zip_files_cached, 
             how='outer', indicator=True, validate='one_to_one'
@@ -27,49 +30,40 @@ def get_zip_files() -> pd.DataFrame:
        .query('_merge == "left_only"')
         .drop(columns='_merge')
     )
-    scraped = scrape.mirror_no_directories(scrape_queue, '*.zip', pkg.zip_dir)
-    zip_files = zip_files_remote
+    scraped, zip_files = scrape.mirror_no_directories(pkg.zip_dir, '*.zip', zip_queue), zip_files_remote
     if not scraped.empty:
         pkg.save_dataset(zip_files, 'zip_files')
     assert sorted(os.listdir(pkg.zip_dir)) == sorted(zip_files.name)
-    return zip_files
+    return zip_files, scraped
 
-def get_txt_files(zip_files=None) -> pd.DataFrame:
-    if zip_files is None:
-        zip_files = get_zip_files()
-    txt_files_packed = (zip_files
-        .merge(pd
-            .concat([
-                    unpack.infolist(row.name)
-                    for row in zip_files.itertuples()
-                ],
-                ignore_index=True
-            ),
-            how='left', on='name', validate='one_to_many'
-        )
-    )
+def get_txt_files() -> Tuple[pd.DataFrame, pd.DataFrame]:
+    zip_files, _ = get_zip_files()
+    txt_files_packed = unpack.infolist(pkg.zip_dir, zip_files)
     try:
         txt_files_cached = pkg.load_dataset('txt_files')
     except:
         os.makedirs(pkg.txt_dir)
         txt_files_cached = pd.DataFrame(columns=txt_files_packed.columns.values)
     assert sorted(os.listdir(pkg.txt_dir)) == sorted(txt_files_cached.filename)
-    unpack_queue = (pd
+    txt_queue = (pd
         .merge(
             txt_files_packed, txt_files_cached, 
             how='outer', indicator=True, validate='one_to_one'
         )
         .query('_merge == "left_only"')
         .drop(columns='_merge')
-        .drop_duplicates('name')
     )
-    unpack.extractall(unpack_queue, pkg.txt_dir)
-    txt_files = txt_files_packed
-    if not unpack_queue.empty:
+    zip_queue = txt_queue.drop_duplicates('name')
+    unpack.extract(pkg.zip_dir, zip_queue, pkg.txt_dir)
+    unpacked, txt_files = txt_queue.loc[:, ['filename']], txt_files_packed
+    if not unpacked.empty:
         pkg.save_dataset(txt_files, 'txt_files')
-        try:
-            pkg.remove_dataset('repaired')
-        except:
-            pass
     assert sorted(os.listdir(pkg.txt_dir)) == sorted(txt_files.filename)
-    return txt_files
+    return txt_files, unpacked
+
+def fix_txt_files() -> pd.DataFrame:
+    txt_files, _ = get_txt_files()
+    repaired = repair.directory(pkg.txt_dir, txt_files)
+    if not repaired.empty:
+        pkg.save_dataset(repaired, 'repaired')
+    return repaired
