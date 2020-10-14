@@ -66,7 +66,7 @@ def index(parsed: pd.DataFrame) -> pd.DataFrame:
             'url'          : 'category',
             'name'         : 'category',
             'last_modified': pd.CategoricalDtype(ordered=True),
-            'date'         : pd.CategoricalDtype(ordered=True),
+            'modified'     : pd.CategoricalDtype(ordered=True),
             # filename     : object
             'prefix'       : 'category',
             # period       : object
@@ -84,7 +84,7 @@ def index(parsed: pd.DataFrame) -> pd.DataFrame:
             # field_content: object
         })
         .loc[:,[
-            'gid', 'url', 'name', 'last_modified', 'date', 'filename' , 'prefix', 'period', 'freq', 'no', 'ext',
+            'gid', 'url', 'name', 'last_modified', 'modified', 'filename' , 'prefix', 'period', 'freq', 'no', 'ext',
             'type', 'player_red', 'player_blue', 'result', 'ending', 'num_moves', 'num_turns', 'next_move', 'field_content'
         ]]
     )

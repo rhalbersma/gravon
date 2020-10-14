@@ -8,6 +8,7 @@ import os.path as osp
 import zipfile as zf
 
 import pandas as pd
+from tqdm import tqdm
 
 import gravon.package as pkg
 
@@ -20,14 +21,15 @@ def infolist(name: str) -> pd.DataFrame:
                 if not mem.is_dir()
             ],
             columns=[
-                'name', 'filename', 'date'
+                'name', 'filename', 'modified'
             ]
         )
     )
 
-def extractall(name: str, path: str) -> None:
-    with zf.ZipFile(osp.join(pkg.zip_dir, name)) as src:
-        for mem in src.infolist():
-            if not mem.is_dir():
-                mem.filename = osp.basename(mem.filename)
-                src.extract(mem, path)
+def extractall(files: pd.DataFrame, path: str) -> None:
+    for row in tqdm(files.itertuples(), total=files.shape[0]):
+        with zf.ZipFile(osp.join(pkg.zip_dir, row.name)) as src:
+            for mem in src.infolist():
+                if not mem.is_dir():
+                    mem.filename = osp.basename(mem.filename)
+                    src.extract(mem, path)
