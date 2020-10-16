@@ -3,6 +3,8 @@
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
 
+from typing import Tuple
+
 import pandas as pd
 
 _type = {
@@ -48,6 +50,30 @@ _num_turns = {
     7: '>350'
 }
 
+def txt_files(parsed: pd.DataFrame) -> pd.DataFrame:
+    return (parsed
+        .replace({
+            'type': _type
+        })
+        .astype(dtype={
+            'gid'          : 'int32',
+            'url'          : 'category',
+            'name'         : 'category',
+            'last_modified': pd.CategoricalDtype(ordered=True),
+            'modified'     : pd.CategoricalDtype(ordered=True),
+            # filename     : object
+            'prefix'       : 'category',
+            # period       : object
+            'freq'         : 'category',
+            'no'           : 'int32',
+            'ext'          : 'category',
+            'type'         : pd.CategoricalDtype(categories=_type.values())
+        })
+        .loc[:,[
+            'gid', 'url', 'name', 'last_modified', 'modified', 'filename', 'prefix', 'period', 'freq', 'no', 'ext', 'type'
+        ]]
+    )
+
 def index(parsed: pd.DataFrame) -> pd.DataFrame:
     return (parsed
         .assign(
@@ -63,16 +89,6 @@ def index(parsed: pd.DataFrame) -> pd.DataFrame:
         })
         .astype(dtype={
             'gid'          : 'int32',
-            'url'          : 'category',
-            'name'         : 'category',
-            'last_modified': pd.CategoricalDtype(ordered=True),
-            'modified'     : pd.CategoricalDtype(ordered=True),
-            # filename     : object
-            'prefix'       : 'category',
-            # period       : object
-            'freq'         : 'category',
-            'no'           : 'int32',
-            'ext'          : 'category',
             'type'         : pd.CategoricalDtype(categories=_type.values()),
             'player_red'   : 'category',
             'player_blue'  : 'category',
@@ -84,8 +100,7 @@ def index(parsed: pd.DataFrame) -> pd.DataFrame:
             # field_content: object
         })
         .loc[:,[
-            'gid', 'url', 'name', 'last_modified', 'modified', 'filename' , 'prefix', 'period', 'freq', 'no', 'ext',
-            'type', 'player_red', 'player_blue', 'result', 'ending', 'num_moves', 'num_turns', 'next_move', 'field_content'
+            'gid', 'type', 'player_red', 'player_blue', 'result', 'ending', 'num_moves', 'num_turns', 'next_move', 'field_content'
         ]]
     )
 
@@ -99,12 +114,15 @@ def games(parsed: pd.DataFrame) -> pd.DataFrame:
         })
     )
 
+def index_games(parsed: Tuple[pd.DataFrame, pd.DataFrame]) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    return index(parsed[0]), games(parsed[1])
+
 def setups(parsed: pd.DataFrame) -> pd.DataFrame:
     return (parsed
         .astype(dtype={
             'player': pd.CategoricalDtype(categories=_player.values())
         })
-    )    
+    )
 
 def results(parsed: pd.DataFrame) -> pd.DataFrame:
     return (parsed
@@ -113,13 +131,13 @@ def results(parsed: pd.DataFrame) -> pd.DataFrame:
             .str.lower()
             .str.replace(' ', '_')
             , axis='columns'
-        ))    
+        ))
         .reset_index()
         .rename(columns = {
             'index'     : 'rid',
             '#_of_turns': 'num_turns'
         })
-        .replace({'type': {                
+        .replace({'type': {
             'Classic'           : 0,
             'Barrage'           : 1,
             'Free'              : 2,

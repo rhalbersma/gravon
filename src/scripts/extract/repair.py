@@ -82,22 +82,22 @@ def _xml(dirname: str, basename: str) -> Tuple[Optional[str], Optional[int]]:
     error_code = error3 * 4 + error2 * 2 + error1 * 1
     return basename, error_code
 
-def _subset(dirname: str, files: pd.DataFrame, repairer: Callable[[str, str], Tuple[str, int]]) -> List[Tuple[str, int]]:
+def _subset(dirname: str, txt_files: pd.DataFrame, repairer: Callable[[str, str], Tuple[str, int]]) -> List[Tuple[str, int]]:
     return [
         repairer(dirname, row.filename)
-        for row in tqdm(files.itertuples(), total=files.shape[0])
+        for row in tqdm(txt_files.itertuples(), total=txt_files.shape[0])
     ]
 
-def directory(dirname: str, files: pd.DataFrame) -> pd.DataFrame:
+def directory(dirname: str, txt_files: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(
         data=[
-            (filename, error_code)
+            (basename, error_code)
             for ext, repairer in [
                 ('.gsn', _gsn),
                 ('.xml', _xml)
             ]
-            for filename, error_code in _subset(dirname, files.query('filename.str.endswith(@ext)'), repairer)
-            if filename and error_code  # filter out files that were already clean
+            for basename, error_code in _subset(dirname, txt_files.query('filename.str.endswith(@ext)'), repairer)
+            if basename and error_code  # filter out files that were already clean
         ],
         columns=[
             'filename', 'error_code'
