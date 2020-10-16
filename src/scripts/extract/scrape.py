@@ -111,20 +111,20 @@ def _daily_results(date: dt.date) -> pd.DataFrame:
         .assign(Date = date)
     )
 
-def results(prefix: str, start: dt.date, end: dt.date) -> List[str]:
+def results(start: dt.date, end: dt.date, dirname: str) -> List[str]:
     """
     Example:
-        >>> scrape.results(pkg.daily_dir, '2003-06-01', pd.to_datetime('today').date())
+        >>> scrape.results('2003-06-01', pd.to_datetime('today').date(), pkg.daily_dir)
     """
     dates = pd.date_range(start, end, closed='left')
-    files = [
+    basenames = [
         f'results-{date.date()}.csv'
         for date in dates
     ]
-    os.makedirs(prefix, exist_ok=True)
-    for date, file in tqdm(zip(dates, files), total=len(dates)):
-        _daily_results(date).to_csv(os.path.join(prefix, file), index=False)
-    return files
+    os.makedirs(dirname, exist_ok=True)
+    for date, basename in tqdm(zip(dates, basenames), total=len(dates)):
+        _daily_results(date).to_csv(os.path.join(dirname, basename), index=False)
+    return basenames
 
 def player_type(nick: str, type=0) -> pd.DataFrame:
     return (

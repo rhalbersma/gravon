@@ -21,8 +21,8 @@ def _gsn(dirname: str, basename: str) -> Tuple[Optional[str], Optional[int]]:
         # https://forum.gravon.de/phpBB/viewtopic.php?p=24838&highlight=#24838
         # classic.2003.06.07.505.gsn
         ends = [
-            idx 
-            for idx, line in enumerate(lines) 
+            idx
+            for idx, line in enumerate(lines)
             if line == 'END'
         ]
         assert ends[-1] == len(lines) - 2
@@ -71,9 +71,9 @@ def _xml(dirname: str, basename: str) -> Tuple[Optional[str], Optional[int]]:
     with open(path, 'w') as file:
         file.write(lxml.etree
             .tostring(
-                tree, 
-                xml_declaration=True, 
-                encoding='UTF-8', 
+                tree,
+                xml_declaration=True,
+                encoding='UTF-8',
                 pretty_print=True
             )
             .decode('utf-8')
@@ -92,10 +92,10 @@ def directory(dirname: str, files: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(
         data=[
             (filename, error_code)
-            for ext, repairer in [ 
+            for ext, repairer in [
                 ('.gsn', _gsn),
                 ('.xml', _xml)
-            ] 
+            ]
             for filename, error_code in _subset(dirname, files.query('filename.str.endswith(@ext)'), repairer)
             if filename and error_code  # filter out files that were already clean
         ],
