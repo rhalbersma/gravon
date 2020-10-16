@@ -42,6 +42,7 @@ stratego_url = f'{gravon_url}/gravon/stratego'
 games_dir = _get_resource('games')
 txt_dir = os.path.join(games_dir, 'txt')
 zip_dir = os.path.join(games_dir, 'zip')
+archive_dir = os.path.join(games_dir, 'archive')
 
 results_dir = _get_resource('results')
 daily_dir = os.path.join(results_dir, 'daily')
