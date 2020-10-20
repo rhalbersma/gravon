@@ -15,12 +15,12 @@ import gravon.pattern as pattern
 H, W = 4, 10
 
 def inner(matrix: np.array) -> np.array:
-    return matrix[1:(H + 1), 1:(W + 1)]
+    return matrix[1:-1, 1:-1]
 
 matrix_init = np.full((H + 2, W + 2), Rank.lake, dtype='int8')
-matrix_init[H + 1, 1: 3] = Rank.empty
-matrix_init[H + 1, 5: 7] = Rank.empty
-matrix_init[H + 1, 9:11] = Rank.empty
+matrix_init[-1, 1: 3] = Rank.empty
+matrix_init[-1, 5: 7] = Rank.empty
+matrix_init[-1, 9:11] = Rank.empty
 
 inf = 99
 dtf_init = np.full((H + 2, W + 2), inf, dtype='int8')
@@ -55,7 +55,7 @@ class Setup:
     def __init__(self, setup: str, type='classic'):
         assert len(setup) == H * W
         self.matrix = matrix_init.copy()
-        self.matrix[1:(H + 1), 1:(W + 1)] = np.array([
+        self.matrix[1:-1, 1:-1] = np.array([
             rank_lookup[piece]
             for piece in setup
         ]).reshape((H, W))
