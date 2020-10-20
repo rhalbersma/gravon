@@ -14,19 +14,23 @@ import gravon.pattern as pattern
 
 H, W = 4, 10
 
-matrix_e0 = np.full((H + 2, W + 2), Rank.lake, dtype='int8')
-matrix_e0[H + 1, 1: 3] = Rank.empty
-matrix_e0[H + 1, 5: 7] = Rank.empty
-matrix_e0[H + 1, 9:11] = Rank.empty
+def inner(matrix: np.array) -> np.array:
+    return matrix[1:(H + 1), 1:(W + 1)]
+
+matrix_init = np.full((H + 2, W + 2), Rank.lake, dtype='int8')
+matrix_init[H + 1, 1: 3] = Rank.empty
+matrix_init[H + 1, 5: 7] = Rank.empty
+matrix_init[H + 1, 9:11] = Rank.empty
 
 inf = 99
-dtf_e0 = np.full((H + 2, W + 2), inf, dtype='int8')
-dtf_e0[matrix_e0 == Rank.empty] = -1
+dtf_init = np.full((H + 2, W + 2), inf, dtype='int8')
+dtf_init[matrix_init == Rank.empty] = -1
 
 row_labels = [ str(row +        1) for row in range(H) ]
 col_labels = [ chr(col + ord('a')) for col in range(W) ]
 
 def neighbors_idx(r: int, c: int) -> Tuple[Tuple[int, int]]:
+    assert (1 <= r <= H) and (1 <= c <= W)
     return (r + 1, c), (r - 1, c), (r, c + 1), (r, c - 1)
 
 def neighbors_mat(m: np.array, r: int, c: int) -> Tuple:
@@ -50,7 +54,8 @@ lanes[3, 4:6] = '_'
 class Setup:
     def __init__(self, setup: str, type='classic'):
         assert len(setup) == H * W
-        self.matrix = np.array([
+        self.matrix = matrix_init.copy()
+        self.matrix[1:(H + 1), 1:(W + 1)] = np.array([
             rank_lookup[piece]
             for piece in setup
         ]).reshape((H, W))
@@ -59,57 +64,60 @@ class Setup:
     def __str__(self) -> str:
         return ''.join([
             rank_labels[piece] 
-            for piece in self.matrix.flatten() 
+            for piece in inner(self.matrix).flatten() 
         ])
 
-    def is_legal(self) -> bool:
-        return \
-            dict(zip(*np.unique(self.matrix, return_counts=True))) == \
+    def ok(self) -> bool:
+        return (
+            dict(zip(*np.unique(inner(self.matrix), return_counts=True))) ==
             dict(list(filter(lambda item: item[1] > 0, zip(Rank, rank_counts(self.type)))))
+        )
+
+    def piece_label(self, r: int, c: int) -> str:
+        assert (1 <= r <= H) and (1 <= c <= W)
+        return rank_labels[self.matrix[r, c]] + col_labels[c - 1] + row_labels[r - 1]
 
     def h1(self) -> np.array:
         """
         Distance to freedom
         """
-        self.matrix_e = matrix_e0.copy()
-        self.matrix_e[1:(H + 1), 1:(W + 1)] = self.matrix
-        flag_or_bomb = np.isin(self.matrix_e, (Rank._F, Rank._B))
-        dtf_e = dtf_e0.copy()
+        flag_or_bomb = np.isin(self.matrix, (Rank._F, Rank._B))
+        dtf = dtf_init.copy()
         level = -1
-        assert np.sum(dtf_e == level) > 0
+        assert np.sum(dtf == level) > 0
         while True:
-            updated = dtf_e.copy()
+            updated = dtf.copy()
             for r in range(1, H + 1):
                 for c in range(1, W + 1):
-                    if (not flag_or_bomb[r, c]) and (dtf_e[r, c] > level) and (level in neighbors_mat(dtf_e, r, c)):
+                    if (not flag_or_bomb[r, c]) and (dtf[r, c] > level) and (level in neighbors_mat(dtf, r, c)):
                         updated[r, c] = level + 1
-            dtf_e = updated
+            dtf = updated
             level += 1
-            if np.sum(dtf_e == level) == 0:
+            if np.sum(dtf == level) == 0:
                 break
-        updated = dtf_e.copy()
+        updated = dtf.copy()
         for r in range(1, H + 1):
             for c in range(1, W + 1):
                 if flag_or_bomb[r, c]:
-                    updated[r, c] = min(1 + min(neighbors_mat(dtf_e, r, c)), inf)
-        self.dtf_e = updated    
-        self.dtf = self.dtf_e[1:(H + 1), 1:(W + 1)]
-        return self.dtf
+                    updated[r, c] = min(1 + min(neighbors_mat(dtf, r, c)), inf)
+        self.dtf = updated    
+        return inner(self.dtf)
 
     def h2(self) -> Tuple[List[str]]:
         """"
         Pieces surrounded by bombs
         """
         self.surrounded = [ 
-            rank_labels[self.matrix[r, c]] + col_labels[c] + row_labels[r] 
+            self.piece_label(r, c) 
             for r, c in map(tuple, np.transpose(np.where(
                 self.dtf == inf
             )))
+            if (1 <= r <= H) and (1 <= c <= W)
         ]
         self.partially_surrounded = [
-            rank_labels[self.matrix[r, c]] + col_labels[c] + row_labels[r] 
+            self.piece_label(r, c) 
             for r, c in map(tuple, np.transpose(np.where(
-                (self.dtf > 5) & (self.dtf != inf)
+                (inner(self.dtf) > 5) & (inner(self.dtf) != inf)
             )))
         ]
         return self.surrounded, self.partially_surrounded
@@ -124,74 +132,102 @@ class Setup:
         """
         Flag defense
         """
-        flag_side = lanes[2, np.where(self.matrix == Rank._F)[1]]
-        self.flag_defense = self.matrix[lanes == flag_side]
-        return np.sort(self.flag_defense)
+        flag_side = lanes[2, np.where(inner(self.matrix) == Rank._F)[1]]
+        return np.sort(inner(self.matrix)[lanes == flag_side])
 
     def h5(self) -> List[str]:
         """"
         Pieces blocked by the spy
         """
-        spy = tuple(np.transpose(np.where(self.matrix_e == Rank._1))[0])
-        self.blocked_by_spy = [
-            rank_labels[self.matrix_e[r, c]] + col_labels[c - 1] + row_labels[r - 1]
+        spy = tuple(np.transpose(np.where(self.matrix == Rank._1))[0])
+        blocked_by_spy = [
+            self.piece_label(r, c)
             for r, c in neighbors_idx(*spy)
-            if self.dtf_e[r, c] > self.dtf_e[spy]
+            if self.dtf[r, c] > self.dtf[spy]
         ]
-        return self.blocked_by_spy 
+        return blocked_by_spy 
 
     def h6(self) -> List[str]:
         """"
         Pieces blocked by a slightly lower piece
         """
-        self.blocking_higher = [
-            rank_labels[self.matrix_e[r, c]] + col_labels[c - 1] + row_labels[r - 1]
+        blocking_higher = [
+            self.piece_label(r, c)
             for r, c in product(range(1, H + 1), range(1, W + 1))
             if any([(
-                    (self.matrix_e[r, c] in range(2, 9)) and
-                    (self.matrix_e[n] - self.matrix_e[r, c] in (1, 2)) and
-                    (1 < self.dtf_e[r, c] < self.dtf_e[n])
+                    (self.matrix[r, c] in range(2, 9)) and
+                    (self.matrix[n] - self.matrix[r, c] in (1, 2)) and
+                    (1 < self.dtf[r, c] < self.dtf[n])
                 )
                 for n in neighbors_idx(r, c)
             ])
         ]
-        self.blocked_by_lower = [
-            rank_labels[self.matrix_e[r, c]] + col_labels[c - 1] + row_labels[r - 1]
+        blocked_by_lower = [
+            self.piece_label(r, c)
             for r, c in product(range(1, H + 1), range(1, W + 1))
             if any([(
-                    (self.matrix_e[n] in range(2, 9)) and
-                    (self.matrix_e[r, c] - self.matrix_e[n] in (1, 2)) and
-                    (1 < self.dtf_e[n] < self.dtf_e[r, c])
+                    (self.matrix[n] in range(2, 9)) and
+                    (self.matrix[r, c] - self.matrix[n] in (1, 2)) and
+                    (1 < self.dtf[n] < self.dtf[r, c])
                 )
                 for n in neighbors_idx(r, c)
             ])
         ]
-        return self.blocking_higher, self.blocked_by_lower
+        return blocking_higher, blocked_by_lower
 
     def h7(self) -> List[str]:
         """
         Miners on the front row
         """
-        self.front_row_miners = [
-            rank_labels[self.matrix[r, c]] + col_labels[c] + row_labels[r]
+        front_row_miners = [
+            self.piece_label(r, c)
             for r, c in map(tuple, np.transpose(np.where(
                 (self.matrix == Rank._3) & (self.dtf == 0)
             )))
         ]
-        return self.front_row_miners
+        return front_row_miners
 
-    def h8(self) -> List[str]:
+    def h8(self) -> Tuple[List[str], List[str], List[str]]:
+        """
+        Bomb protection
+        """
         spy_or_scout = map(tuple, np.transpose(np.where(
-            np.isin(self.matrix_e, (Rank._1, Rank._2))
+            np.isin(self.matrix, (Rank._1, Rank._2))
         )))
         bomb_weakeners = [
-            rank_labels[self.matrix_e[r, c]] + col_labels[c - 1] + row_labels[r - 1]
+            self.piece_label(r, c)
             for r, c in spy_or_scout
             for n in neighbors_idx(r, c)
-            if self.matrix_e[n] == Rank._B
+            if self.matrix[n] == Rank._B
         ]
+        bombs = map(tuple, np.transpose(np.where(
+            self.matrix == Rank._B
+        )))
+        strong_bombs = [
+            self.piece_label(r, c)
+            for r, c in bombs
+            if any([
+                np.isin(self.matrix[n], (Rank._4, Rank._5))
+                for n in neighbors_idx(r, c)
+            ])        
+        ]
+        flag_bombs = [
+            self.piece_label(r, c)
+            for r, c in bombs
+            if any([
+                self.matrix[n] == Rank._F
+                for n in neighbors_idx(r, c)
+            ])        
+        ]
+        weak_flag_bombs = list(set(flag_bombs) - set(strong_bombs))
+        return bomb_weakeners, strong_bombs, weak_flag_bombs
 
-        return bomb_weakeners
+    def h9(self):
+        """
+        Starting pieces
+        """
+        starting_pieces = dict(zip(*np.unique(inner(self.matrix)[inner(self.dtf) < 2], return_counts=True)))
+        return sum(starting_pieces.values()), starting_pieces
 
 vdb = [
     """
@@ -239,7 +275,7 @@ df = (pd
         data=list(map(lambda s: Setup(pattern.serial(s)), vdb)),
         columns=['setup']
     ).assign(
-        is_legal = lambda r: r.setup.apply(lambda x: x.is_legal()),
+        ok = lambda r: r.setup.apply(lambda x: x.ok()),
         h1 = lambda r: r.setup.apply(lambda x: x.h1()),
         h2 = lambda r: r.setup.apply(lambda x: x.h2()),
         h3 = lambda r: r.setup.apply(lambda x: x.h3()),
@@ -247,7 +283,8 @@ df = (pd
         h5 = lambda r: r.setup.apply(lambda x: x.h5()),
         h6 = lambda r: r.setup.apply(lambda x: x.h6()),
         h7 = lambda r: r.setup.apply(lambda x: x.h7()),
-        h8 = lambda r: r.setup.apply(lambda x: x.h8())
+        h8 = lambda r: r.setup.apply(lambda x: x.h8()),
+        h9 = lambda r: r.setup.apply(lambda x: x.h9())
     )
     .drop(columns='h1')
 )
