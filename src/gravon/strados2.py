@@ -37,7 +37,7 @@ symbols = {
 }
 
 def decode_setup(setup: str) -> str:
-    return ''.join([
+    return ''.join(
         rank_labels[symbols[piece][2]]
         for piece in setup
-    ])
+    )
