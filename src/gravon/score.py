@@ -3,7 +3,7 @@
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
 
-from itertools import product
+import itertools
 from typing import List, Tuple
 
 import numpy as np
@@ -14,29 +14,38 @@ import gravon.pattern as pattern
 
 H, W = 4, 10
 
-def inner(matrix: np.array) -> np.array:
-    return matrix[1:-1, 1:-1]
+def inner(padded: np.array) -> np.array:
+    return padded[1:-1, 1:-1]
 
-matrix_init = np.full((H + 2, W + 2), Rank.lake, dtype='int8')
-matrix_init[-1, 1: 3] = Rank.empty
-matrix_init[-1, 5: 7] = Rank.empty
-matrix_init[-1, 9:11] = Rank.empty
+def setup_area():
+    return itertools.product(range(1, H + 1), range(1, W + 1))
+
+rank_init = np.full((H + 2, W + 2), Rank.lake, dtype='int8')
+rank_init[-1, 1: 3] = Rank.empty
+rank_init[-1, 5: 7] = Rank.empty
+rank_init[-1, 9:11] = Rank.empty
 
 inf = 99
 dtf_init = np.full((H + 2, W + 2), inf, dtype='int8')
-dtf_init[matrix_init == Rank.empty] = -1
+dtf_init[rank_init == Rank.empty] = -1
 
 row_labels = [ str(row +        1) for row in range(H) ]
 col_labels = [ chr(col + ord('a')) for col in range(W) ]
 
-def neighbors_idx(r: int, c: int) -> Tuple[Tuple[int, int]]:
+Square = Tuple[int, int]
+
+def squares_where(condition: np.array) -> List[Square]:
+    return list(map(tuple, np.transpose(np.where(condition))))
+
+def neighbors(sq: Square) -> Tuple[Square]:
+    r, c = sq
     assert (1 <= r <= H) and (1 <= c <= W)
     return (r + 1, c), (r - 1, c), (r, c + 1), (r, c - 1)
 
-def neighbors_mat(m: np.array, r: int, c: int) -> Tuple:
+def neighbors_mat(m: np.array, sq: Square) -> Tuple:
     return tuple(
-        m[sq]
-        for sq in neighbors_idx(r, c)
+        m[nb]
+        for nb in neighbors(sq)
     )
 
 def rank_counts(type='classic') -> List[int]:
@@ -54,179 +63,180 @@ lanes[3, 4:6] = '_'
 class Setup:
     def __init__(self, setup: str, type='classic'):
         assert len(setup) == H * W
-        self.matrix = matrix_init.copy()
-        self.matrix[1:-1, 1:-1] = np.array([
-            rank_lookup[piece]
-            for piece in setup
+        self.rank = rank_init.copy()
+        self.rank[1:-1, 1:-1] = np.array([
+            rank_lookup[rank_label]
+            for rank_label in setup
         ]).reshape((H, W))
         self.type = type
 
     def __str__(self) -> str:
-        return ''.join([
-            rank_labels[piece] 
-            for piece in inner(self.matrix).flatten() 
-        ])
+        return ''.join(
+            rank_labels[r] 
+            for r in inner(self.rank).flatten() 
+        )
 
     def ok(self) -> bool:
         return (
-            dict(zip(*np.unique(inner(self.matrix), return_counts=True))) ==
+            dict(zip(*np.unique(inner(self.rank), return_counts=True))) ==
             dict(list(filter(lambda item: item[1] > 0, zip(Rank, rank_counts(self.type)))))
         )
 
-    def piece_label(self, r: int, c: int) -> str:
+    def piece_label(self, sq: Square) -> str:
+        r, c = sq
         assert (1 <= r <= H) and (1 <= c <= W)
-        return rank_labels[self.matrix[r, c]] + col_labels[c - 1] + row_labels[r - 1]
+        return rank_labels[self.rank[r, c]] + col_labels[c - 1] + row_labels[r - 1]
 
     def h1(self) -> np.array:
         """
         Distance to freedom
         """
-        flag_or_bomb = np.isin(self.matrix, (Rank._F, Rank._B))
+        _FB = np.isin(self.rank, (Rank._F, Rank._B))
         dtf = dtf_init.copy()
         level = -1
         assert np.sum(dtf == level) > 0
         while True:
             updated = dtf.copy()
-            for r in range(1, H + 1):
-                for c in range(1, W + 1):
-                    if (not flag_or_bomb[r, c]) and (dtf[r, c] > level) and (level in neighbors_mat(dtf, r, c)):
-                        updated[r, c] = level + 1
+            for sq in setup_area():
+                if (not _FB[sq]) and (dtf[sq] > level) and (level in neighbors_mat(dtf, sq)):
+                    updated[sq] = level + 1
             dtf = updated
             level += 1
             if np.sum(dtf == level) == 0:
                 break
         updated = dtf.copy()
-        for r in range(1, H + 1):
-            for c in range(1, W + 1):
-                if flag_or_bomb[r, c]:
-                    updated[r, c] = min(1 + min(neighbors_mat(dtf, r, c)), inf)
+        for sq in setup_area():
+            if _FB[sq]:
+                updated[sq] = min(1 + min(neighbors_mat(dtf, sq)), inf)
         self.dtf = updated    
         return inner(self.dtf)
 
     def h2(self) -> Tuple[List[str]]:
-        """"
+        """
         Pieces surrounded by bombs
         """
-        self.surrounded = [ 
-            self.piece_label(r, c) 
-            for r, c in map(tuple, np.transpose(np.where(
-                self.dtf == inf
-            )))
-            if (1 <= r <= H) and (1 <= c <= W)
+        dtf_inf = [ 
+            self.piece_label(sq) 
+            for sq in squares_where(
+                (self.dtf == inf) & (self.rank != Rank.lake)
+            )
         ]
-        self.partially_surrounded = [
-            self.piece_label(r, c) 
-            for r, c in map(tuple, np.transpose(np.where(
-                (inner(self.dtf) > 5) & (inner(self.dtf) != inf)
-            )))
+        dtf_gt5 = [
+            self.piece_label(sq) 
+            for sq in squares_where(
+                (self.dtf > 5) & (self.dtf != inf)
+            )
         ]
-        return self.surrounded, self.partially_surrounded
+        return dtf_inf, dtf_gt5
 
     def h3(self) -> bool:
-        """"
+        """
         Flag Bombed in
         """
-        return any(map(lambda p: p.startswith('F'), self.surrounded))
+        return [
+            self.piece_label(sq) 
+            for sq in squares_where(
+                (self.dtf == inf) & (self.rank == Rank._F)
+            )
+        ]
 
     def h4(self) -> List[int]:
         """
         Flag defense
         """
-        flag_side = lanes[2, np.where(inner(self.matrix) == Rank._F)[1]]
-        return np.sort(inner(self.matrix)[lanes == flag_side])
+        flag_side = lanes[2, np.where(inner(self.rank) == Rank._F)[1]]
+        return np.sort(inner(self.rank)[lanes == flag_side])
 
     def h5(self) -> List[str]:
-        """"
+        """
         Pieces blocked by the spy
         """
-        spy = tuple(np.transpose(np.where(self.matrix == Rank._1))[0])
-        blocked_by_spy = [
-            self.piece_label(r, c)
-            for r, c in neighbors_idx(*spy)
-            if self.dtf[r, c] > self.dtf[spy]
+        ge7_blocked_by_1 = [
+            self.piece_label(nb)
+            for _1 in squares_where(self.rank == Rank._1)
+            for nb in neighbors(_1)
+            if (self.rank[nb] >= Rank._7) and (self.dtf[nb] > self.dtf[_1])
         ]
-        return blocked_by_spy 
+        return ge7_blocked_by_1
 
     def h6(self) -> List[str]:
-        """"
+        """
         Pieces blocked by a slightly lower piece
         """
-        blocking_higher = [
-            self.piece_label(r, c)
-            for r, c in product(range(1, H + 1), range(1, W + 1))
+        blocking_12higher = [
+            self.piece_label(sq)
+            for sq in setup_area()
             if any([(
-                    (self.matrix[r, c] in range(2, 9)) and
-                    (self.matrix[n] - self.matrix[r, c] in (1, 2)) and
-                    (1 < self.dtf[r, c] < self.dtf[n])
+                    (self.rank[sq] in range(2, 9)) and
+                    (self.rank[nb] - self.rank[sq] in (1, 2)) and
+                    (1 < self.dtf[sq] < self.dtf[nb])
                 )
-                for n in neighbors_idx(r, c)
+                for nb in neighbors(sq)
             ])
         ]
-        blocked_by_lower = [
-            self.piece_label(r, c)
-            for r, c in product(range(1, H + 1), range(1, W + 1))
+        blocked_by_12lower = [
+            self.piece_label(sq)
+            for sq in setup_area()
             if any([(
-                    (self.matrix[n] in range(2, 9)) and
-                    (self.matrix[r, c] - self.matrix[n] in (1, 2)) and
-                    (1 < self.dtf[n] < self.dtf[r, c])
+                    (self.rank[nb] in range(2, 9)) and
+                    (self.rank[sq] - self.rank[nb] in (1, 2)) and
+                    (1 < self.dtf[nb] < self.dtf[sq])
                 )
-                for n in neighbors_idx(r, c)
+                for nb in neighbors(sq)
             ])
         ]
-        return blocking_higher, blocked_by_lower
+        return blocking_12higher, blocked_by_12lower
 
     def h7(self) -> List[str]:
         """
         Miners on the front row
         """
-        front_row_miners = [
-            self.piece_label(r, c)
-            for r, c in map(tuple, np.transpose(np.where(
-                (self.matrix == Rank._3) & (self.dtf == 0)
-            )))
+        _3_front = [
+            self.piece_label(_3)
+            for _3 in squares_where(
+                (self.rank == Rank._3) & (self.dtf <= 1)
+            )
         ]
-        return front_row_miners
+        return _3_front
 
     def h8(self) -> Tuple[List[str], List[str], List[str]]:
         """
         Bomb protection
         """
-        spy_or_scout = map(tuple, np.transpose(np.where(
-            np.isin(self.matrix, (Rank._1, Rank._2))
-        )))
-        bomb_weakeners = [
-            self.piece_label(r, c)
-            for r, c in spy_or_scout
-            for n in neighbors_idx(r, c)
-            if self.matrix[n] == Rank._B
-        ]
-        bombs = map(tuple, np.transpose(np.where(
-            self.matrix == Rank._B
-        )))
-        strong_bombs = [
-            self.piece_label(r, c)
-            for r, c in bombs
+        _12_B = [
+            self.piece_label(_12)
+            for _12 in squares_where(np.isin(self.rank, (Rank._1, Rank._2)))
             if any([
-                np.isin(self.matrix[n], (Rank._4, Rank._5))
-                for n in neighbors_idx(r, c)
+                self.rank[nb] == Rank._B
+                for nb in neighbors(_12)
+            ])
+        ]
+        _Bs = squares_where(self.rank == Rank._B)
+        _B_45 = [
+            self.piece_label(_B)
+            for _B in _Bs
+            if any([
+                self.rank[nb] in (Rank._4, Rank._5)
+                for nb in neighbors(_B)
             ])        
         ]
-        flag_bombs = [
-            self.piece_label(r, c)
-            for r, c in bombs
+        _B_F = [
+            self.piece_label(_B)
+            for _B in _Bs
             if any([
-                self.matrix[n] == Rank._F
-                for n in neighbors_idx(r, c)
+                self.rank[nb] == Rank._F
+                for nb in neighbors(_B)
             ])        
         ]
-        weak_flag_bombs = list(set(flag_bombs) - set(strong_bombs))
-        return bomb_weakeners, strong_bombs, weak_flag_bombs
+        weak_flag_bombs = list(set(_B_F) - set(_B_45))
+        #return _12_B, _B_45, _B_F, weak_flag_bombs
+        return _12_B, _B_45, _B_F, weak_flag_bombs
 
     def h9(self):
         """
         Starting pieces
         """
-        starting_pieces = dict(zip(*np.unique(inner(self.matrix)[inner(self.dtf) < 2], return_counts=True)))
+        starting_pieces = dict(zip(*np.unique(inner(self.rank)[inner(self.dtf) < 2], return_counts=True)))
         return sum(starting_pieces.values()), starting_pieces
 
 vdb = [
