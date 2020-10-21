@@ -16,7 +16,7 @@ info_labels = [
     Info(i).name[0]
     for i in Info
 ]
-info_labels[Info.empty] = '_'
+info_labels[Info.empty] = '-'
 info_labels[Info.lake ] = '#'
 
 class Color(IntEnum):
@@ -29,7 +29,7 @@ color_labels = [
     Color(c).name[0]
     for c in Color
 ]
-color_labels[Color.empty] = '_'
+color_labels[Color.empty] = '-'
 color_labels[Color.lake ] = '#'
 
 class Rank(IntEnum):
@@ -52,6 +52,6 @@ rank_labels = [
     Rank(r).name[1]
     for r in Rank
 ]
-rank_labels[Rank.empty] = '_'
+rank_labels[Rank.empty] = '-'
 rank_labels[Rank.lake ] = '#'
 rank_lookup = dict(zip(rank_labels, Rank))
