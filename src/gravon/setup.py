@@ -148,18 +148,4 @@ class Board:
     #         return np.array([ np.sum(s[side])           for side in self.side_cols ])
 
 
-class Pattern:
-    def board2string(pat2d: str) -> str:
-        return ''.join(reversed(pat2d.splitlines()))
 
-    def any(df: pd.DataFrame, piece: str, indices: list, column: str='setup_str') -> pd.DataFrame:
-        pred = lambda x: any(x[index] == piece for index in indices)
-        return df.loc[lambda x: x[column].apply(pred)]
-
-    def equal(df: pd.DataFrame, pat2d: str, column: str='setup_str') -> pd.DataFrame:
-        pat = board2string(pat2d)
-        return df.query(column + ' == @pat')
-
-    def match(df: pd.DataFrame, pat2d: str, column: str='setup_str') -> pd.DataFrame:
-        pat = board2string(pat2d)
-        return df.query(column + '.str.match(@pat)')
