@@ -60,7 +60,6 @@ def get_ss2() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
 def print_setup_summary():
     st2 = games.get_st2()
     _, game_setup, free_setup, null_setup = get_ss2()
-    print(st2.merge(game_setup).groupby(['freq', 'ext', 'player_red', 'player_blue', 'type'], observed=True).size().unstack(fill_value=0), '\n')
-    print(st2.merge(free_setup).groupby(['freq', 'ext', 'player_red', 'player_blue', 'type'], observed=True).size().unstack(fill_value=0), '\n')
-    print(st2.merge(null_setup).groupby(['freq', 'ext', 'player_red', 'player_blue', 'type'], observed=True).size().unstack(fill_value=0), '\n')
-
+    print(pd.pivot_table(st2.merge(game_setup), index=['freq', 'ext', 'player_red', 'player_blue'], columns=['type'], aggfunc='size', fill_value=0, observed=True), '\n')
+    print(pd.pivot_table(st2.merge(free_setup), index=['freq', 'ext', 'player_red', 'player_blue'], columns=['type'], aggfunc='size', fill_value=0, observed=True), '\n')
+    print(pd.pivot_table(st2.merge(null_setup), index=['freq', 'ext', 'player_red', 'player_blue'], columns=['type'], aggfunc='size', fill_value=0, observed=True), '\n')
