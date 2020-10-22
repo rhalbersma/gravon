@@ -3,94 +3,130 @@
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
 
+from typing import List
+
 import numpy as np
-import pandas as pd
 
-import gravon.piece
+from gravon.piece import Rank, rank_labels, rank_lookup, rank_counts
 
-vdb = """
-6225263X26
-54B1927782
-4B4785B564
-23B23BFB33
-"""
+H, W = 4, 10
 
-vdbs = ''.join(reversed(vdb.splitlines()))
+def inner(padded):
+    return padded[1:-1, 1:-1]
 
-class Board:
-    nrow, ncol = shape = (4, 10)
+class Setup:
+    rank_init = np.full((H + 2, W + 2), Rank.lake, dtype='int8')
+    rank_init[-1, 1: 3] = Rank.empty
+    rank_init[-1, 5: 7] = Rank.empty
+    rank_init[-1, 9:11] = Rank.empty
 
-    row_labels = [ str(row +        1) for row in range(nrow) ]
-    col_labels = [ chr(col + ord('a')) for col in range(ncol) ]
-
-    @staticmethod
-    def to_square(loc) -> str:
-        return Board.col_labels[loc[1]] + Board.row_labels[loc[0]]
-
-    @staticmethod
-    def rank_counts(game_type: str='classic') -> list:
-        """Return a list of piece counts in ascending order of rank for the initial setup."""
-        return {
-            'classic' : [ 1, 1, 8, 5, 4, 4, 4, 3, 2, 1, 1, 6,  0, 0 ],
-            'ultimate': [ 1, 1, 4, 2, 2, 2, 2, 1, 1, 1, 1, 2, 20, 0 ],
-            'duel'    : [ 1, 1, 2, 2, 0, 0, 0, 0, 0, 1, 1, 2, 30, 0 ],
-            'barrage' : [ 1, 1, 2, 1, 0, 0, 0, 0, 0, 1, 1, 1, 32, 0 ]
-        }[game_type]
-
-    @staticmethod
-    def unique_ranks(game_type: str='classic') -> list:
-        """Return a list of unique piece ranks in ascending order of rank for the initial setup."""
-        return {
-            gt: [
-                rank for rank in range(12)
-                if Board.rank_counts(gt)[rank] == 1
-            ]
-            for gt in [ 'classic', 'barrage', 'duel', 'ultimate' ]
-        }[game_type]
-
-    lanes = 3 * [ 'L' ] + 4 * [ 'M' ] + 3 * [ 'R' ]
-
-    side_cols = [ list(range(0, 5)), list(range(5, 10)) ]
-    side_char = [ 'L', 'R' ]
-
-    def __init__(self, placement: list, game_type: str='classic') -> None:
-        assert len(placement) == Board.nrow * Board.ncol
-        self.matrix = np.array(placement).reshape(Board.shape)
+    def __init__(self, setup_str: str, type='classic'):
+        assert len(setup_str) == H * W
+        self.rank = Setup.rank_init.copy()
+        self.rank[1:-1, 1:-1] = np.array([
+            rank_lookup[r]
+            for r in setup_str
+        ]).reshape((H, W))
         self.tensor = np.array([
-            self.matrix % piece.nrank == rank
-            for rank in range(piece.nrank)
-        ]).astype(int)
-        self.game_type = game_type
-        assert self.is_legal()
-
-    def is_legal(self) -> bool:
-        return dict(zip(*np.unique(self.matrix % piece.nrank, return_counts=True))) == {
-            rank % piece.nrank: count
-            for rank in range(piece.nrank)
-            for count in [ Board.rank_counts(self.game_type)[rank] ]
-            if count > 0
-        }
+            inner(self.rank) == r
+            for r in Rank
+        ], dtype='int32')
+        self.type = type     
 
     def __str__(self) -> str:
-        return strados2.generate(self.matrix.flatten())
-
-    def diagram(self, notation='EU', rowsep: str='\n', colsep: str=' ') -> str:
-        hborder = ' ' + colsep + '+' + (Board.ncol + (Board.ncol + 1) * len(colsep)) * '-' + '+'
-        vborder = '|'
-        return rowsep.join(
-            [ hborder ] +
-            [
-                colsep.join(
-                    [ list(reversed(Board.row_labels))[idx] ] +
-                    [ vborder ] +
-                    [ piece.symbols[notation][rank] for rank in row ] +
-                    [ vborder ]
-                )
-                for idx, row in enumerate(np.flip(self.matrix, axis=0))
-            ] +
-            [ hborder ] +
-            [ (2 * ' ') + (2 * colsep) + colsep.join(Board.col_labels) ]
+        return ''.join(
+            rank_labels[r] 
+            for r in inner(self.rank).flatten() 
         )
+
+    def ok(self) -> bool:
+        return (
+            dict(zip(*np.unique(inner(self.rank), return_counts=True))) ==
+            { 
+                rank: count
+                for rank, count in zip(Rank, rank_counts[self.type])
+                if count > 0
+            }
+        )
+
+
+
+
+
+# class Board:
+#     nrow, ncol = shape = (4, 10)
+
+#     row_labels = [ str(row +        1) for row in range(nrow) ]
+#     col_labels = [ chr(col + ord('a')) for col in range(ncol) ]
+
+#     @staticmethod
+#     def to_square(loc) -> str:
+#         return Board.col_labels[loc[1]] + Board.row_labels[loc[0]]
+
+#     @staticmethod
+#     def rank_counts(game_type: str='classic') -> list:
+#         """Return a list of piece counts in ascending order of rank for the initial setup."""
+#         return {
+#             'classic' : [ 1, 1, 8, 5, 4, 4, 4, 3, 2, 1, 1, 6,  0, 0 ],
+#             'ultimate': [ 1, 1, 4, 2, 2, 2, 2, 1, 1, 1, 1, 2, 20, 0 ],
+#             'duel'    : [ 1, 1, 2, 2, 0, 0, 0, 0, 0, 1, 1, 2, 30, 0 ],
+#             'barrage' : [ 1, 1, 2, 1, 0, 0, 0, 0, 0, 1, 1, 1, 32, 0 ]
+#         }[game_type]
+
+#     @staticmethod
+#     def unique_ranks(game_type: str='classic') -> list:
+#         """Return a list of unique piece ranks in ascending order of rank for the initial setup."""
+#         return {
+#             gt: [
+#                 rank for rank in range(12)
+#                 if Board.rank_counts(gt)[rank] == 1
+#             ]
+#             for gt in [ 'classic', 'barrage', 'duel', 'ultimate' ]
+#         }[game_type]
+
+#     lanes = 3 * [ 'L' ] + 4 * [ 'M' ] + 3 * [ 'R' ]
+
+#     side_cols = [ list(range(0, 5)), list(range(5, 10)) ]
+#     side_char = [ 'L', 'R' ]
+
+#     def __init__(self, placement: list, game_type: str='classic') -> None:
+#         assert len(placement) == Board.nrow * Board.ncol
+#         self.matrix = np.array(placement).reshape(Board.shape)
+#         self.tensor = np.array([
+#             self.matrix % piece.nrank == rank
+#             for rank in range(piece.nrank)
+#         ]).astype(int)
+#         self.game_type = game_type
+#         assert self.is_legal()
+
+#     def is_legal(self) -> bool:
+#         return dict(zip(*np.unique(self.matrix % piece.nrank, return_counts=True))) == {
+#             rank % piece.nrank: count
+#             for rank in range(piece.nrank)
+#             for count in [ Board.rank_counts(self.game_type)[rank] ]
+#             if count > 0
+#         }
+
+#     def __str__(self) -> str:
+#         return strados2.generate(self.matrix.flatten())
+
+#     def diagram(self, notation='EU', rowsep: str='\n', colsep: str=' ') -> str:
+#         hborder = ' ' + colsep + '+' + (Board.ncol + (Board.ncol + 1) * len(colsep)) * '-' + '+'
+#         vborder = '|'
+#         return rowsep.join(
+#             [ hborder ] +
+#             [
+#                 colsep.join(
+#                     [ list(reversed(Board.row_labels))[idx] ] +
+#                     [ vborder ] +
+#                     [ piece.symbols[notation][rank] for rank in row ] +
+#                     [ vborder ]
+#                 )
+#                 for idx, row in enumerate(np.flip(self.matrix, axis=0))
+#             ] +
+#             [ hborder ] +
+#             [ (2 * ' ') + (2 * colsep) + colsep.join(Board.col_labels) ]
+#         )
 
     # def argwhere(self, rank: int) -> list:
     #     return np.argwhere(self.tensor[rank,:,:])

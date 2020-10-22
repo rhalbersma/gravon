@@ -54,4 +54,29 @@ rank_labels = [
 ]
 rank_labels[Rank.empty] = '-'
 rank_labels[Rank.lake ] = '#'
+
 rank_lookup = dict(zip(rank_labels, Rank))
+
+rank_names = [
+    'flag',
+    'spy',
+    'scout',
+    'miner',
+    'sergeant',
+    'lieutenant',
+    'captain',
+    'major',
+    'colonel',
+    'general',
+    'marshal',
+    'bomb',
+    'empty',
+    'lake'
+]
+
+rank_counts = {
+    'classic' : [ 1, 1, 8, 5, 4, 4, 4, 3, 2, 1, 1, 6,  0, 0 ],
+    'ultimate': [ 1, 1, 4, 2, 2, 2, 2, 1, 1, 1, 1, 2, 20, 0 ],
+    'duel'    : [ 1, 1, 2, 2, 0, 0, 0, 0, 0, 1, 1, 2, 30, 0 ],
+    'barrage' : [ 1, 1, 2, 1, 0, 0, 0, 0, 0, 1, 1, 1, 32, 0 ]
+}    

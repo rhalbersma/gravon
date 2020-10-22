@@ -17,18 +17,20 @@ def pat1d_mirrored(pat2d: str) -> str:
         for line in pat2d.splitlines()[::-1] 
     ])
 
-def equal(df: pd.DataFrame, pat2d: str, column='setup', mirrored=True) -> pd.DataFrame:
+def equal(df: pd.DataFrame, pat2d: str, column='setup_str', mirrored=True, by=['gid', 'player']) -> pd.DataFrame:
     return (pd
         .concat([
             df.query(f'{column} == @pat1d_identity(@pat2d)').assign(match_type = 'identity'),
             df.query(f'{column} == @pat1d_mirrored(@pat2d)').assign(match_type = 'mirrored') if mirrored else pd.DataFrame()
-        ], ignore_index=True)
+        ])
+        .sort_values(by)
     )
 
-def match(df: pd.DataFrame, pat2d: str, column='setup', mirrored=True) -> pd.DataFrame:
+def match(df: pd.DataFrame, pat2d: str, column='setup_str', mirrored=True, by=['gid', 'player']) -> pd.DataFrame:
     return (pd
         .concat([
             df.query(f'{column}.str.match(@pat1d_identity(@pat2d))').assign(match_type = 'identity'),
             df.query(f'{column}.str.match(@pat1d_mirrored(@pat2d))').assign(match_type = 'mirrored') if mirrored else pd.DataFrame()
-        ], ignore_index=True)
+        ])
+        .sort_values(by)
     )

@@ -9,25 +9,14 @@ from typing import List, Tuple
 import numpy as np
 import pandas as pd
 
-from gravon.piece import Rank, rank_labels, rank_lookup
 import gravon.pattern as pattern
+from gravon.piece import Rank, rank_labels, rank_lookup
+from gravon.setup import Setup, H, W, inner
 
-H, W = 4, 10
-
-def inner(padded: np.array) -> np.array:
-    return padded[1:-1, 1:-1]
-
-def setup_area():
-    return itertools.product(range(1, H + 1), range(1, W + 1))
-
-rank_init = np.full((H + 2, W + 2), Rank.lake, dtype='int8')
-rank_init[-1, 1: 3] = Rank.empty
-rank_init[-1, 5: 7] = Rank.empty
-rank_init[-1, 9:11] = Rank.empty
 
 inf = 99
 dtf_init = np.full((H + 2, W + 2), inf, dtype='int8')
-dtf_init[rank_init == Rank.empty] = -1
+dtf_init[Setup.rank_init == Rank.empty] = -1
 
 row_labels = [ str(row +        1) for row in range(H) ]
 col_labels = [ chr(col + ord('a')) for col in range(W) ]
@@ -48,38 +37,18 @@ def neighbors_mat(m: np.array, sq: Square) -> Tuple:
         for nb in neighbors(sq)
     )
 
-def rank_counts(type='classic') -> List[int]:
-    return {
-        'classic' : [ 1, 1, 8, 5, 4, 4, 4, 3, 2, 1, 1, 6,  0, 0 ],
-        'ultimate': [ 1, 1, 4, 2, 2, 2, 2, 1, 1, 1, 1, 2, 20, 0 ],
-        'duel'    : [ 1, 1, 2, 2, 0, 0, 0, 0, 0, 1, 1, 2, 30, 0 ],
-        'barrage' : [ 1, 1, 2, 1, 0, 0, 0, 0, 0, 1, 1, 1, 32, 0 ]
-    }[type]
-
 lanes = np.array((3 * [ 'L' ] + 4 * [ 'M' ] + 3 * [ 'R' ]) * 4).reshape(H, W)
 lanes[0:2, :] = '_'
 lanes[3, 4:6] = '_'
 
-class Setup:
-    def __init__(self, setup: str, type='classic'):
-        assert len(setup) == H * W
-        self.rank = rank_init.copy()
-        self.rank[1:-1, 1:-1] = np.array([
-            rank_lookup[rank_label]
-            for rank_label in setup
-        ]).reshape((H, W))
-        self.type = type
+class Eval(Setup):
+    def __init__(self, **kw):
+        super.__init__(self, **kw)
 
     def __str__(self) -> str:
         return ''.join(
             rank_labels[r] 
             for r in inner(self.rank).flatten() 
-        )
-
-    def ok(self) -> bool:
-        return (
-            dict(zip(*np.unique(inner(self.rank), return_counts=True))) ==
-            dict(list(filter(lambda item: item[1] > 0, zip(Rank, rank_counts(self.type)))))
         )
 
     def piece_label(self, sq: Square) -> str:

@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 
 import gravon.package as pkg
+from gravon.setup import Setup
 import gravon.strados2 as strados2
 
 import scripts.transform.games as games
@@ -28,29 +29,31 @@ def get_ss2() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         game_setup = (si2
             .query('type != "free" & field_content.notnull()')
             .assign(
-                setup_red  = lambda r: r.field_content.str[:40],
-                setup_blue = lambda r: r.field_content.str[60:].str[::-1],
-                dmz        = lambda r: r.field_content.str[40:60]
+                setup_str_red  = lambda r: r.field_content.str[:40],
+                setup_str_blue = lambda r: r.field_content.str[60:].str[::-1],
+                dmz            = lambda r: r.field_content.str[40:60]
             )
         )
         assert (game_setup.dmz == 'AA__AA__AAAA__AA__AA').all()
         ss2 = (pd
             .wide_to_long(
                 st2.merge(game_setup).drop(columns=['player_red', 'player_blue', 'dmz']), 
-                stubnames=['setup'], i='gid', j='player', sep='_', suffix='(red|blue)'
+                stubnames=['setup_str'], i='gid', j='player', sep='_', suffix='(red|blue)'
             )
             .reset_index()
             .assign(
-                result = lambda r: np.where(r.player == r.result, 1.0, np.where(r.result == "draw", 0.5, 0.0)),
-                setup  = lambda r: r.setup.apply(strados2.decode_setup)
+                result    = lambda r: np.where(r.player == r.result, 1.0, np.where(r.result == "draw", 0.5, 0.0)),
+                setup_str = lambda r: r.setup_str.apply(strados2.decode_setup),
+                setup_obj = lambda r: r.apply(lambda x: Setup(x.setup_str, x.type), axis=1)
             )
             .loc[:, [
-                'gid', 'filename', 'period', 'freq', 'ext', 'type', 'player', 'result', 'ending', 'num_moves', 'num_turns', 'next_move', 'setup'
+                'gid', 'filename', 'period', 'freq', 'ext', 'type', 'player', 'result', 'ending', 'num_moves', 'num_turns', 'next_move', 'setup_str', 'setup_obj'
             ]]
             .pipe(label.setups)
             .sort_values(['gid', 'player'])
             .reset_index(drop=True)
         )
+        assert all(ss2.setup_obj.apply(lambda x: x.ok()))
         pkg.save_dataset(ss2, 'ss2')
         pkg.save_dataset(game_setup, 'game_setup')
         pkg.save_dataset(free_setup, 'free_setup')
