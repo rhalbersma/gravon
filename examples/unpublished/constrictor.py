@@ -18,6 +18,6 @@ setup = (
     ..........
     """
 )
-games = pattern.match(ss2.query('period >= "2006-09"'), setup).sort_values(['gid', 'player'])
-pd.pivot_table(games, index=['player'], columns=['match_type'], aggfunc='size', fill_value=0)
+games = pattern.match(ss2.query('period >= "2006-09"'), setup)
+pd.crosstab(games.player, games.match_type, margins=True)
 archive.make_zip(games, 'constrictor')

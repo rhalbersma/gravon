@@ -9,10 +9,13 @@ import numpy as np
 
 from gravon.piece import Rank, rank_labels, rank_lookup, rank_counts
 
-H, W = 4, 10
-
 def inner(padded):
     return padded[1:-1, 1:-1]
+
+H, W = 4, 10
+
+row_labels = [ str(row +        1) for row in range(H) ]
+col_labels = [ chr(col + ord('a')) for col in range(W) ]
 
 class Setup:
     rank_init = np.full((H + 2, W + 2), Rank.lake, dtype='int8')
@@ -30,7 +33,7 @@ class Setup:
         self.tensor = np.array([
             inner(self.rank) == r
             for r in Rank
-        ], dtype='int32')
+        ], dtype='int8')
         self.type = type     
 
     def __str__(self) -> str:
@@ -56,8 +59,6 @@ class Setup:
 # class Board:
 #     nrow, ncol = shape = (4, 10)
 
-#     row_labels = [ str(row +        1) for row in range(nrow) ]
-#     col_labels = [ chr(col + ord('a')) for col in range(ncol) ]
 
 #     @staticmethod
 #     def to_square(loc) -> str:
@@ -185,3 +186,14 @@ class Setup:
 
 
 
+
+# import gravon.pattern as pattern
+# flag_a1 = (
+#     """
+#     ..........
+#     ..........
+#     ..........
+#     F.........
+#     """
+# )
+# pattern.match(df, flag_a1, mirrored=False)
