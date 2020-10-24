@@ -16,10 +16,12 @@ def heatmap(data: np.array, format_string=None):
         .rename_axis('row')
         .reset_index()
         .melt(id_vars='row', var_name='col')
-        .assign(pct = lambda r: r.value.rank(pct=True) / 100)
+        .assign(log = lambda r: np.log10(r.value))
     )
 
-    return (p9.ggplot(df, p9.aes(y='row', x='col', fill='pct'))
+    return (p9.ggplot(df, p9.aes(y='row', x='col', fill='log'))
+        # https://stackoverflow.com/a/62161556/819272
+        # Plotnine does not support changing the position of any axis.
         + p9.geom_tile()
         + p9.coord_equal()
         + p9.geom_text(p9.aes(label='value'), format_string=format_string, size=8)
