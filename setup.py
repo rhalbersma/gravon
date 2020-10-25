@@ -20,7 +20,7 @@ setup(
         'gravon': ['data/*.pkl'],
     },    
     install_requires=[
-        'bs4', 'lxml', 'notebook', 'numpy', 'pandas', 'pylint', 'requests', 'tqdm'
+        'bs4', 'IPython', 'lxml', 'notebook', 'numpy', 'pandas', 'plotnine', 'pylint', 'requests', 'tqdm'
     ],
     python_requires='>=3.8',
     classifiers=[

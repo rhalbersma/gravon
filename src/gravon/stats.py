@@ -8,5 +8,7 @@ from typing import List
 import numpy as np
 import pandas as pd
 
-def setup_ranks(df: pd.DataFrame, func=None, column='setup_obj') -> np.array:
+def setup_placement(df: pd.DataFrame, func=None, column='setup_obj') -> np.array:
+    # Tensors are stored as type np.int8 to save storage.
+    # To avoid integer overflow, expand them to type int.
     return df[column].apply(lambda x: x.tensor.astype(int)).agg(func)
