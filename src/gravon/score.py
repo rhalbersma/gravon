@@ -251,7 +251,7 @@ scores = [ 18, 18, 20, 22, 19, 16 ]
 
 df = (pd
     .DataFrame(
-        data=list(map(lambda s: Setup(pattern.serial(s)), vdb)),
+        data=list(map(lambda s: Setup(pattern.pat1d_identity(s)), vdb)),
         columns=['setup']
     ).assign(
         ok = lambda r: r.setup.apply(lambda x: x.ok()),
