@@ -9,7 +9,7 @@ import gravon.package as pkg
 import gravon.pattern as pattern
 import gravon.archive as archive
 
-ss2 = pkg.load_dataset('ss2')
+ss2 = pkg.load_dataset('ss2').query('type == "classic" & period >= "2006-09"')
 setup = (
     """
     55X.......
@@ -18,6 +18,6 @@ setup = (
     ..........
     """
 )
-games = pattern.match(ss2.query('period >= "2006-09"'), setup)
+games = pattern.match(ss2, setup)
 pd.crosstab(games.player, games.match_type, margins=True)
 archive.make_zip(games, 'constrictor')
