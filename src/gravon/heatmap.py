@@ -78,7 +78,7 @@ def tidy2(df1: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
         .drop(columns=['value_x', 'value_y'])
     )
 
-def heatmap0(df: pd.DataFrame, format_string=None, axis_text=True):
+def setup_heatmap0(df: pd.DataFrame, format_string=None, axis_text=True):
     # https://stackoverflow.com/a/62161556/819272
     # Plotnine does not support changing the position of any axis.
     return (
@@ -97,13 +97,13 @@ def heatmap0(df: pd.DataFrame, format_string=None, axis_text=True):
         )
     )
 
-def heatmap1(array: np.array, format_string=None, axis_text=True, margins=(0, 1), margin_fill=True, normalize=True, rotated=False):
+def setup_heatmap1(array: np.array, format_string=None, axis_text=True, margins=(0, 1), margin_fill=True, normalize=True, rotated=False):
     df = tidy1(array, margins=margins, margin_fill=margin_fill, normalize=normalize, rotated=rotated)
-    return heatmap0(df, format_string=format_string, axis_text=axis_text) 
+    return setup_heatmap0(df, format_string=format_string, axis_text=axis_text) 
 
-def heatmap2(array1: np.array, array2: np.array, format_string=None, axis_text=True, margins=(0, 1), margin_fill=True, normalize=True, rotated=False):
+def setup_heatmap2(array1: np.array, array2: np.array, format_string=None, axis_text=True, margins=(0, 1), margin_fill=True, normalize=True, rotated=False):
     df1 = tidy1(array1, margins=margins, margin_fill=margin_fill, normalize=normalize, rotated=rotated)
     df2 = tidy1(array2, margins=margins, margin_fill=margin_fill, normalize=normalize, rotated=rotated)
     df = tidy2(df1, df2)
-    return heatmap0(df, format_string=format_string, axis_text=axis_text)
+    return setup_heatmap0(df, format_string=format_string, axis_text=axis_text)
  
