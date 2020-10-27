@@ -26,7 +26,7 @@ def tidy1(array: np.array, margins=(0, 1), margin_fill=True, normalize=True, rot
         .agg(value = ('value', 'sum'))
         .reset_index()
         .assign(
-            col = 'rows',
+            col = 'total',
             scale = lambda r: np.log10(r.value / (10 * mu)) if margin_fill else np.nan,
             value = lambda r: r.value / (40 * mu) if normalize else r.value
         )
@@ -36,25 +36,25 @@ def tidy1(array: np.array, margins=(0, 1), margin_fill=True, normalize=True, rot
         .agg(value = ('value', 'sum'))
         .reset_index()
         .assign(
-            row = 'cols',
+            row = 'total',
             scale = lambda r: np.log10(r.value / (4 * mu)) if margin_fill else np.nan,
             value = lambda r: r.value / (40 * mu) if normalize else r.value
         )
     ) if 1 in margins else pd.DataFrame()
     grand = (pd.DataFrame(
-        data=[('cols', 'rows', rows.value.sum(), np.nan)],
+        data=[('total', 'total', rows.value.sum(), np.nan)],
         columns=['row', 'col', 'value', 'scale']
     )) if 0 in margins else pd.DataFrame()
 
     row_cat = row_labels.copy()
     row_cat += [''] if (0 in margins and margin_fill) else []
-    row_cat += ['cols']
+    row_cat += ['total']
     row_cat = list(reversed(row_cat)) if rotated else row_cat
 
     col_cat = col_labels.copy()
     col_cat = list(reversed(col_cat)) if rotated else col_cat
     col_cat += [''] if (1 in margins and margin_fill) else []
-    col_cat += ['rows']
+    col_cat += ['total']
 
     return (pd
         .concat([data, rows, cols, grand])
