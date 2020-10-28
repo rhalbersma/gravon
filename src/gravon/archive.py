@@ -18,5 +18,5 @@ def make_zip(df: pd.DataFrame, base_dir: str) -> None:
         src = os.path.join(pkg.txt_dir, row.filename)
         if os.path.exists(src):
             shutil.copy(src, base_name)
-    shutil.make_archive(base_name, 'zip', pkg.archive_dir, base_dir)
+    shutil.make_archive(base_name, 'zip', base_name)
     shutil.rmtree(base_name)
