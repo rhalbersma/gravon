@@ -10,7 +10,7 @@ import plotnine as p9
 
 from gravon.setup import row_labels, col_labels
 
-def tidy1(array: np.array, margins=(0, 1), margin_fill=True, normalize=True, rotated=False) -> pd.DataFrame:
+def tidy1(array: np.array, margins=(0, 1), margin_fill=True, normalize=True, rotate=False) -> pd.DataFrame:
     mu = array.mean()
     data = (pd
         .DataFrame(array, index=row_labels, columns=col_labels)
@@ -49,10 +49,10 @@ def tidy1(array: np.array, margins=(0, 1), margin_fill=True, normalize=True, rot
     row_cat = row_labels.copy()
     row_cat += [''] if (0 in margins and margin_fill) else []
     row_cat += ['total']
-    row_cat = list(reversed(row_cat)) if rotated else row_cat
+    row_cat = list(reversed(row_cat)) if rotate else row_cat
 
     col_cat = col_labels.copy()
-    col_cat = list(reversed(col_cat)) if rotated else col_cat
+    col_cat = list(reversed(col_cat)) if rotate else col_cat
     col_cat += [''] if (1 in margins and margin_fill) else []
     col_cat += ['total']
 
@@ -97,13 +97,13 @@ def setup_heatmap0(df: pd.DataFrame, format_string=None, axis_text=True):
         )
     )
 
-def setup_heatmap1(array: np.array, format_string=None, axis_text=True, margins=(0, 1), margin_fill=True, normalize=True, rotated=False):
-    df = tidy1(array, margins=margins, margin_fill=margin_fill, normalize=normalize, rotated=rotated)
+def setup_heatmap1(array: np.array, format_string=None, axis_text=True, margins=(0, 1), margin_fill=True, normalize=True, rotate=False):
+    df = tidy1(array, margins=margins, margin_fill=margin_fill, normalize=normalize, rotate=rotate)
     return setup_heatmap0(df, format_string=format_string, axis_text=axis_text) 
 
-def setup_heatmap2(array1: np.array, array2: np.array, format_string=None, axis_text=True, margins=(0, 1), margin_fill=True, normalize=True, rotated=False):
-    df1 = tidy1(array1, margins=margins, margin_fill=margin_fill, normalize=normalize, rotated=rotated)
-    df2 = tidy1(array2, margins=margins, margin_fill=margin_fill, normalize=normalize, rotated=rotated)
+def setup_heatmap2(array1: np.array, array2: np.array, format_string=None, axis_text=True, margins=(0, 1), margin_fill=True, normalize=True, rotate=False):
+    df1 = tidy1(array1, margins=margins, margin_fill=margin_fill, normalize=normalize, rotate=rotate)
+    df2 = tidy1(array2, margins=margins, margin_fill=margin_fill, normalize=normalize, rotate=rotate)
     df = tidy2(df1, df2)
     return setup_heatmap0(df, format_string=format_string, axis_text=axis_text)
  
