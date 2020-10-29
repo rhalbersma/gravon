@@ -20,4 +20,4 @@ setup = (
 )
 games = pattern.match(ss2, setup)
 pd.crosstab(games.player, games.match_type, margins=True)
-archive.make_zip(games, 'constrictor')
+archive.make_zip(games.filename.tolist(), 'constrictor')
