@@ -20,7 +20,7 @@ _player = {
     1: 'blue'
 }
 
-_result = {
+_winner = {
     0: 'red',
     1: 'blue',
     2: 'draw'
@@ -82,7 +82,7 @@ def index(parsed: pd.DataFrame) -> pd.DataFrame:
         )
         .replace({
             'type'     : _type,
-            'result'   : _result,
+            'winner'   : _winner,
             'ending'   : _ending,
             'num_turns': _num_turns,
             'next_move': _player
@@ -92,7 +92,7 @@ def index(parsed: pd.DataFrame) -> pd.DataFrame:
             'type'         : pd.CategoricalDtype(categories=_type.values()),
             'player_red'   : 'category',
             'player_blue'  : 'category',
-            'result'       : pd.CategoricalDtype(categories=_result.values()),
+            'winner'       : pd.CategoricalDtype(categories=_winner.values()),
             'ending'       : pd.CategoricalDtype(categories=_ending.values()),
             'num_moves'    : 'int16',
             'num_turns'    : pd.CategoricalDtype(categories=_num_turns.values()),
@@ -100,7 +100,7 @@ def index(parsed: pd.DataFrame) -> pd.DataFrame:
             # field_content: object
         })
         .loc[:,[
-            'gid', 'type', 'player_red', 'player_blue', 'result', 'ending', 'num_moves', 'num_turns', 'next_move', 'field_content'
+            'gid', 'type', 'player_red', 'player_blue', 'winner', 'ending', 'num_moves', 'num_turns', 'next_move', 'field_content'
         ]]
     )
 

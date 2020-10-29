@@ -42,12 +42,19 @@ def get_ss2() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
             )
             .reset_index()
             .assign(
-                result    = lambda r: np.where(r.player == r.result, 1.0, np.where(r.result == "draw", 0.5, 0.0)),
+                result    = lambda r: np.where(r.player == r.winner, 'win', np.where(r.winner == 'draw', 'draw', 'loss')),
+                score     = lambda r: np.where(r.result == 'win', 1.0, np.where(r.result == 'draw', 0.5, 0.0)),
                 setup_str = lambda r: r.setup_str.apply(strados2.decode_setup),
                 setup_obj = lambda r: r.apply(lambda x: Setup(x.setup_str, x.type), axis=1)
             )
+            .astype(dtype={
+                'result': pd.CategoricalDtype(categories=['win', 'draw', 'loss'])
+            })
+            .pipe(lambda df: pd.concat([df, pd.get_dummies(df.result, prefix='', prefix_sep='')], axis=1))            
             .loc[:, [
-                'gid', 'filename', 'period', 'freq', 'ext', 'type', 'player', 'result', 'ending', 'num_moves', 'num_turns', 'next_move', 'setup_str', 'setup_obj'
+                'gid', 'filename', 'period', 'freq', 'ext', 'type', 'player', 
+                'result', 'win', 'draw', 'loss', 'score', 'ending', 
+                'num_moves', 'num_turns', 'next_move', 'setup_str', 'setup_obj'
             ]]
             .pipe(label.setups)
             .sort_values(['gid', 'player'])

@@ -45,12 +45,12 @@ def _gsn(gid: int, basename: str) -> Tuple[GameHeader, GameBody]:
 
         players, result = lines[-1].split(' result ')
         player_red, player_blue = players.split(' vs ')
-        ending, result = (
+        ending, winner = (
             int(attrib) for
             attrib in result.split(' winner ')
         )
 
-    return (gid, type, player_red, player_blue, result, ending, num_moves, field_content), game_body
+    return (gid, type, player_red, player_blue, winner, ending, num_moves, field_content), game_body
 
 def _xml(gid: int, basename: str) -> Tuple[GameHeader, GameBody]:
     filename = os.path.join(pkg.txt_dir, basename)
@@ -86,19 +86,19 @@ def _xml(gid: int, basename: str) -> Tuple[GameHeader, GameBody]:
         for p in tree.findall('//player')
     )
 
-    result, ending = (
+    winner, ending = (
         int(tree.find('//result').attrib[a])
         for a in ('winner', 'type')
     )
-    result -= 1
+    winner -= 1
 
-    return (gid, type, player_red, player_blue, result, ending, num_moves, field_content), game_body
+    return (gid, type, player_red, player_blue, winner, ending, num_moves, field_content), game_body
 
 def _concatter(index: Iterable[GameHeader], games: Iterable[GameBody]) -> Tuple[pd.DataFrame, pd.DataFrame]:
     return pd.DataFrame(
         data=index,
         columns=[
-            'gid', 'type', 'player_red', 'player_blue', 'result', 'ending', 'num_moves', 'field_content'
+            'gid', 'type', 'player_red', 'player_blue', 'winner', 'ending', 'num_moves', 'field_content'
         ]
     ), pd.concat(games)
 
