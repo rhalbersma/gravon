@@ -13,7 +13,6 @@ import gravon.pattern as pattern
 from gravon.piece import Rank, rank_labels, rank_lookup
 from gravon.setup import Setup, H, W, inner
 
-
 inf = 99
 dtf_init = np.full((H + 2, W + 2), inf, dtype='int8')
 dtf_init[Setup.rank_init == Rank.empty] = -1
