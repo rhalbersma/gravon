@@ -7,31 +7,52 @@
 
 import pandas as pd
 
-from gravon import archive, pattern, stratego, tidy
+import gravon.package as pkg
+import gravon.pattern as pattern
 
-games = pd.read_csv("../data/classic.csv").query('game_fmt == ".xml"')
-setups = tidy.setups(games.copy())
-setups = tidy.add_WLD_score(setups)
+top_setups = {
+    'version1': (
+        """
+        2465276146
+        7282229X8B
+        25347263BF
+        53BBB4353B
+        """
+    ),
+    'version2': (
+        """
+        2545274146
+        7298242X8B
+        52362273BF
+        35BB6B363B
+        """
+    ),
+}
 
-df = setups.groupby('setup_str').agg({
-    'W': ['sum'],
-    'L': ['sum'],
-    'D': ['sum'],
-    'score': ['count', 'mean']
-})
-df.reset_index(inplace=True)
-df.columns = ['_'.join(col) for col in df.columns.values]
-df.columns = df.columns.str.rstrip('_')
-df.columns = df.columns.str.replace(r'_sum$', '')
-df.columns = df.columns.str.replace(r'^score_', '')
-atleast10 = df.query('count >= 10').sort_values(by=['count'], ascending=False)
-atleast10.reset_index(drop=True, inplace=True)
-best_winning_percentage = atleast10.query('count >= 50').sort_values(by=['mean'], ascending=False)
+classic_xml = (pkg
+    .load_dataset('ss2')
+    .query('type == "classic" & ext == ".xml"')
+    .assign(result = lambda r: r.result.cat.reorder_categories(['win', 'loss', 'draw']))
+)
 
-for i in [ 1, 3 ]:
-    s = best_winning_percentage.iloc[i]['setup_str']
-    print('{}\n'.format(stratego.StrategoSetup(s).diagram()))
-    df = pattern.equal(setups, s)
-    files = df['game_id']
-    print('{}\n'.format('\n'.join(files)))
-    games.make_zip(files, s)
+for s in top_setups.values():
+    df = pattern.equal(classic_xml, s, mirrored=False)
+    print(s)
+    print("Here's a listing of the game files for the setup above:\n")
+    print(pd.crosstab(df.player, df.result, margins=True), '\n')
+    for row in df.sort_values('filename').itertuples():
+        print(f'{row.player.capitalize():4} {row.result.capitalize():4} {row.filename}') 
+
+classic = (pkg
+    .load_dataset('ss2')
+    .query('type == "classic"')
+)
+ 
+for s in top_setups.values():
+    df = pattern.equal(classic, s, mirrored=True)
+    print(s)
+    print("Here's a listing of the game files for the setup above:\n")
+    print(pd.crosstab([df.player, df.match_type], df.result, margins=True), '\n')
+    print(pd.crosstab(df.period, df.result, margins=True), '\n')
+    for row in df.itertuples():
+        print(f'{row.player.capitalize():4} {row.result.capitalize():4} {row.filename}') 

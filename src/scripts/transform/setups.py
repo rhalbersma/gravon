@@ -9,7 +9,9 @@ import numpy as np
 import pandas as pd
 
 import gravon.package as pkg
+from gravon.piece import Rank
 from gravon.setup import Setup
+from gravon.stats import unique_square_where
 import gravon.strados2 as strados2
 
 import scripts.transform.games as games
@@ -45,7 +47,11 @@ def get_ss2() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
                 result    = lambda r: np.where(r.player == r.winner, 'win', np.where(r.winner == 'draw', 'draw', 'loss')),
                 score     = lambda r: np.where(r.result == 'win', 1.0, np.where(r.result == 'draw', 0.5, 0.0)),
                 setup_str = lambda r: r.setup_str.apply(strados2.decode_setup),
-                setup_obj = lambda r: r.apply(lambda x: Setup(x.setup_str, x.type), axis=1)
+                setup_obj = lambda r: r.apply(lambda x: Setup(x.setup_str, x.type), axis=1),
+                marshal   = lambda r: r.setup_obj.apply(lambda x: unique_square_where(x.rank[1:-1,1:-1] == Rank._X)),
+                general   = lambda r: r.setup_obj.apply(lambda x: unique_square_where(x.rank[1:-1,1:-1] == Rank._9)),
+                spy       = lambda r: r.setup_obj.apply(lambda x: unique_square_where(x.rank[1:-1,1:-1] == Rank._1)),
+                flag      = lambda r: r.setup_obj.apply(lambda x: unique_square_where(x.rank[1:-1,1:-1] == Rank._F))
             )
             .astype(dtype={
                 'result': pd.CategoricalDtype(categories=['win', 'draw', 'loss'])
@@ -54,7 +60,8 @@ def get_ss2() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
             .loc[:, [
                 'gid', 'filename', 'period', 'freq', 'ext', 'type', 'player', 
                 'result', 'win', 'draw', 'loss', 'score', 'ending', 
-                'num_moves', 'num_turns', 'next_move', 'setup_str', 'setup_obj'
+                'num_moves', 'num_turns', 'next_move', 'setup_str', 'setup_obj',
+                'marshal', 'general', 'spy', 'flag'
             ]]
             .pipe(label.setups)
             .sort_values(['gid', 'player'])
