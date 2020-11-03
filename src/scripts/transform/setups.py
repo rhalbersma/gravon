@@ -17,18 +17,18 @@ import gravon.strados2 as strados2
 import scripts.transform.games as games
 import scripts.transform.label as label
 
-def get_ss2() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+def get_setups() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     try:
-        ss2 = pkg.load_dataset('ss2')
-        game_setup = pkg.load_dataset('game_setup')
-        free_setup = pkg.load_dataset('free_setup')
-        null_setup = pkg.load_dataset('null_setup')
+        db_setups   = pkg.load_dataset(  'db_setups')
+        game_setups = pkg.load_dataset('game_setups')
+        free_setups = pkg.load_dataset('free_setups')
+        null_setups = pkg.load_dataset('null_setups')
     except:
         st2 = games.get_st2()
         si2, _ = games.get_si2_sg2()
-        free_setup = si2.query('type == "free"')
-        null_setup = si2.query('field_content.isnull()')
-        game_setup = (si2
+        free_setups = si2.query('type == "free"')
+        null_setups = si2.query('field_content.isnull()')
+        game_setups = (si2
             .query('type != "free" & field_content.notnull()')
             .assign(
                 setup_str_red  = lambda r: r.field_content.str[:40],
@@ -36,10 +36,10 @@ def get_ss2() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
                 dmz            = lambda r: r.field_content.str[40:60]
             )
         )
-        assert (game_setup.dmz == 'AA__AA__AAAA__AA__AA').all()
-        ss2 = (pd
+        assert (game_setups.dmz == 'AA__AA__AAAA__AA__AA').all()
+        db_setups = (pd
             .wide_to_long(
-                st2.merge(game_setup).drop(columns=['player_red', 'player_blue', 'dmz']), 
+                st2.merge(game_setups).drop(columns=['player_red', 'player_blue', 'dmz']), 
                 stubnames=['setup_str'], i='gid', j='player', sep='_', suffix='(red|blue)'
             )
             .reset_index()
@@ -48,10 +48,10 @@ def get_ss2() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
                 score     = lambda r: np.where(r.result == 'win', 1.0, np.where(r.result == 'draw', 0.5, 0.0)),
                 setup_str = lambda r: r.setup_str.apply(strados2.decode_setup),
                 setup_obj = lambda r: r.apply(lambda x: Setup(x.setup_str, x.type), axis=1),
-                marshal   = lambda r: r.setup_obj.apply(lambda x: unique_square_where(x.rank[1:-1,1:-1] == Rank._X)),
-                general   = lambda r: r.setup_obj.apply(lambda x: unique_square_where(x.rank[1:-1,1:-1] == Rank._9)),
-                spy       = lambda r: r.setup_obj.apply(lambda x: unique_square_where(x.rank[1:-1,1:-1] == Rank._1)),
-                flag      = lambda r: r.setup_obj.apply(lambda x: unique_square_where(x.rank[1:-1,1:-1] == Rank._F))
+                marshal   = lambda r: r.setup_obj.apply(lambda x: unique_square_where(x.matrix[1:-1,1:-1] == Rank._X)),
+                general   = lambda r: r.setup_obj.apply(lambda x: unique_square_where(x.matrix[1:-1,1:-1] == Rank._9)),
+                spy       = lambda r: r.setup_obj.apply(lambda x: unique_square_where(x.matrix[1:-1,1:-1] == Rank._1)),
+                flag      = lambda r: r.setup_obj.apply(lambda x: unique_square_where(x.matrix[1:-1,1:-1] == Rank._F))
             )
             .astype(dtype={
                 'result': pd.CategoricalDtype(categories=['win', 'draw', 'loss'])
@@ -60,23 +60,24 @@ def get_ss2() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
             .loc[:, [
                 'gid', 'filename', 'period', 'freq', 'ext', 'type', 'player', 
                 'result', 'win', 'draw', 'loss', 'score', 'ending', 
-                'num_moves', 'num_turns', 'next_move', 'setup_str', 'setup_obj',
+                'num_moves', 'num_turns', 'next_move', 
+                'setup_str', 'setup_obj',
                 'marshal', 'general', 'spy', 'flag'
             ]]
             .pipe(label.setups)
             .sort_values(['gid', 'player'])
             .reset_index(drop=True)
         )
-        assert all(ss2.setup_obj.apply(lambda x: x.ok()))
-        pkg.save_dataset(ss2, 'ss2')
-        pkg.save_dataset(game_setup, 'game_setup')
-        pkg.save_dataset(free_setup, 'free_setup')
-        pkg.save_dataset(null_setup, 'null_setup')
-    return ss2, game_setup, free_setup, null_setup
+        assert all(db_setups.setup_obj.apply(lambda x: x.ok()))
+        pkg.save_dataset(  db_setups,   'db_setups')
+        pkg.save_dataset(game_setups, 'game_setups')
+        pkg.save_dataset(free_setups, 'free_setups')
+        pkg.save_dataset(null_setups, 'null_setups')
+    return db_setups, game_setups, free_setups, null_setups
 
 def print_setup_summary():
     st2 = games.get_st2()
-    _, game_setup, free_setup, null_setup = get_ss2()
-    print(pd.pivot_table(st2.merge(game_setup), index=['freq', 'ext', 'player_red', 'player_blue'], columns=['type'], aggfunc='size', fill_value=0, observed=True), '\n')
-    print(pd.pivot_table(st2.merge(free_setup), index=['freq', 'ext', 'player_red', 'player_blue'], columns=['type'], aggfunc='size', fill_value=0, observed=True), '\n')
-    print(pd.pivot_table(st2.merge(null_setup), index=['freq', 'ext', 'player_red', 'player_blue'], columns=['type'], aggfunc='size', fill_value=0, observed=True), '\n')
+    _, game_setups, free_setups, null_setups = get_setups()
+    print(pd.pivot_table(st2.merge(game_setups), index=['freq', 'ext', 'player_red', 'player_blue'], columns=['type'], aggfunc='size', fill_value=0, observed=True), '\n')
+    print(pd.pivot_table(st2.merge(free_setups), index=['freq', 'ext', 'player_red', 'player_blue'], columns=['type'], aggfunc='size', fill_value=0, observed=True), '\n')
+    print(pd.pivot_table(st2.merge(null_setups), index=['freq', 'ext', 'player_red', 'player_blue'], columns=['type'], aggfunc='size', fill_value=0, observed=True), '\n')

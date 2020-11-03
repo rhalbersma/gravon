@@ -6,6 +6,7 @@
 from typing import List
 
 import numpy as np
+import pandas as pd
 
 from gravon.piece import Rank, rank_labels, rank_lookup, rank_counts
 
@@ -18,33 +19,47 @@ row_labels = [ str(row +        1) for row in range(H) ]
 col_labels = [ chr(col + ord('a')) for col in range(W) ]
 
 class Setup:
-    rank_init = np.full((H + 2, W + 2), Rank.lake, dtype='int8')
-    rank_init[-1, 1: 3] = Rank.empty
-    rank_init[-1, 5: 7] = Rank.empty
-    rank_init[-1, 9:11] = Rank.empty
+    matrix_init = np.full((H + 2, W + 2), Rank.lake, dtype='int8')
+    matrix_init[-1, 1: 3] = Rank.empty
+    matrix_init[-1, 5: 7] = Rank.empty
+    matrix_init[-1, 9:11] = Rank.empty
 
     def __init__(self, setup_str: str, type='classic'):
         assert len(setup_str) == H * W
-        self.rank = Setup.rank_init.copy()
-        self.rank[1:-1, 1:-1] = np.array([
+        self.matrix = Setup.matrix_init.copy()
+        self.matrix[1:-1, 1:-1] = np.array([
             rank_lookup[r]
             for r in setup_str
         ]).reshape((H, W))
         self.tensor = np.array([
-            inner(self.rank) == r
+            inner(self.matrix) == r
             for r in Rank
         ], dtype='int8')
         self.type = type     
 
     def __str__(self) -> str:
+        return Setup.to_str(self.matrix)
+
+    def mirrored_str(self) -> str:
+        return Setup.to_str(np.flip(self.matrix, axis=1))
+        
+    def standard_str(self) -> str:
+        flag_on_left = np.argwhere(self.tensor[Rank._F])[0, 1] < (W // 2)
+        return str(self) if flag_on_left else self.mirrored_str()
+
+    def matched_str(self, match_type: str) -> str:
+        return str(self) if match_type == 'identity' else self.mirrored_str()
+
+    @staticmethod
+    def to_str(matrix: np.array) -> str:
         return ''.join(
             rank_labels[r] 
-            for r in inner(self.rank).flatten() 
+            for r in inner(matrix).flatten() 
         )
 
     def ok(self) -> bool:
         return (
-            dict(zip(*np.unique(inner(self.rank), return_counts=True))) ==
+            dict(zip(*np.unique(inner(self.matrix), return_counts=True))) ==
             { 
                 rank: count
                 for rank, count in zip(Rank, rank_counts[self.type])
@@ -52,9 +67,29 @@ class Setup:
             }
         )
 
+def add_mirrored(df: pd.DataFrame) -> pd.DataFrame:
+    return (df.
+        assign(
+            mirrored_str = lambda r: r.setup_obj.apply(lambda x: x.mirrored_str()),
+            mirrored_obj = lambda r: r.apply(lambda x: Setup(x.mirrored_str, x.type), axis=1)
+        )
+    )
 
+def add_standard(df: pd.DataFrame) -> pd.DataFrame:
+    return (df.
+        assign(
+            standard_str = lambda r: r.setup_obj.apply(lambda x: x.standard_str()),
+            standard_obj = lambda r: r.apply(lambda x: Setup(x.standard_str, x.type), axis=1)
+        )
+    )
 
-
+def add_matched(df: pd.DataFrame) -> pd.DataFrame:
+    return (df.
+        assign(
+            matched_str = lambda r: r.apply(lambda x: x.setup_obj.matched_str(x.match_type), axis=1),
+            matched_obj = lambda r: r.apply(lambda x: Setup(x.matched_str, x.type), axis=1)
+        )
+    )
 
 # class Board:
 #     nrow, ncol = shape = (4, 10)

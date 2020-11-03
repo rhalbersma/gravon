@@ -8,12 +8,24 @@ from typing import Tuple
 import numpy as np
 import pandas as pd
 
-def setup_placement(df: pd.DataFrame, func=None, column='setup_obj') -> np.array:
+def setup_placement(df: pd.DataFrame, func=None, column='setup') -> np.array:
     # Tensors are stored as type np.int8 to save storage.
     # To avoid integer overflow, expand them to type int.
-    return df[column].apply(lambda x: x.tensor.astype(int)).agg(func)
+    return df[f'{column}_obj'].apply(lambda x: x.tensor.astype(int)).agg(func)
 
 Square = Tuple[int, int]
 
 def unique_square_where(condition: np.array) -> Square:
-    return tuple(np.transpose(np.where(condition))[0])
+    return tuple((np.argwhere(condition))[0])
+
+league_table = {
+    'Games' : ('result', 'count'),
+    'Wins'  : ('win',    'sum'  ),
+    'Draws' : ('draw',   'sum'  ),
+    'Losses': ('loss',   'sum'  ),
+    'Score' : ('score',  'mean' )
+}
+
+score_pct = {
+    'Score': '{:.2%}'
+}
