@@ -55,6 +55,15 @@ rank_labels = [
 rank_labels[Rank.empty] = '-'
 rank_labels[Rank.lake ] = '#'
 
+rank_labels_US = rank_labels.copy()
+rank_labels_US[Rank._1] = 'S'
+for i, r in zip(reversed(range(1, 10)), range(Rank._2, Rank._B)):
+    rank_labels_US[r] = str(i)
+
+def rank_translate(field_content: str, src=rank_labels, dst=rank_labels_US) -> str:
+    translate = dict(zip(src, dst))
+    return ''.join(translate[rank] for rank in field_content)
+
 rank_lookup = dict(zip(rank_labels, Rank))
 
 rank_names = [

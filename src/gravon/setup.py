@@ -8,14 +8,14 @@ from typing import List
 import numpy as np
 import pandas as pd
 
-from gravon.piece import Rank, rank_labels, rank_lookup, rank_counts
+from gravon.piece import Rank, rank_labels, rank_labels_US, rank_lookup, rank_counts
 
 def inner(padded):
     return padded[1:-1, 1:-1]
 
 H, W = 4, 10
 
-row_labels = [ str(row +        1) for row in range(H) ]
+row_labels = [ str(row +      1  ) for row in range(H) ]
 col_labels = [ chr(col + ord('a')) for col in range(W) ]
 
 class Setup:
@@ -91,6 +91,37 @@ def add_matched(df: pd.DataFrame) -> pd.DataFrame:
         )
     )
 
+class Theme:
+    def __init__(self, rowsep='\n', colsep=' ', coordinates=True, frame=True, vborder='|', hborder='-', corner='+'):
+        self.coordinates = coordinates
+        self.frame = frame
+        self.rowsep = rowsep
+        self.colsep = colsep
+        self.vborder = vborder
+        self.hborder = hborder
+        self.corner = corner
+
+theme_classic = Theme()
+theme_minimal = Theme(colsep='', coordinates=False, frame=False)
+
+def diagram(setup_str: str, theme=theme_classic) -> str:
+    matrix = np.array([c for c in setup_str]).reshape((H, W))
+    hframe = (' ' + theme.colsep) * theme.coordinates + theme.corner + (len(theme.colsep) + (1 + len(theme.colsep)) * W) * theme.hborder + theme.corner
+    return theme.rowsep.join(
+        [ hframe ] * theme.frame +
+        [
+            theme.colsep.join(
+                [ list(reversed(row_labels))[idx] ] * theme.coordinates +
+                [ theme.vborder ] * theme.frame +
+                [ c for c in row ] +
+                [ theme.vborder ] * theme.frame
+            )
+            for idx, row in enumerate(np.flip(matrix, axis=0))
+        ] +
+        [ hframe ] * theme.frame +
+        [ (2 * ' ') + (2 * theme.colsep) + theme.colsep.join(col_labels) ] * theme.coordinates
+    )
+
 # class Board:
 #     nrow, ncol = shape = (4, 10)
 
@@ -146,23 +177,7 @@ def add_matched(df: pd.DataFrame) -> pd.DataFrame:
 #     def __str__(self) -> str:
 #         return strados2.generate(self.matrix.flatten())
 
-#     def diagram(self, notation='EU', rowsep: str='\n', colsep: str=' ') -> str:
-#         hborder = ' ' + colsep + '+' + (Board.ncol + (Board.ncol + 1) * len(colsep)) * '-' + '+'
-#         vborder = '|'
-#         return rowsep.join(
-#             [ hborder ] +
-#             [
-#                 colsep.join(
-#                     [ list(reversed(Board.row_labels))[idx] ] +
-#                     [ vborder ] +
-#                     [ piece.symbols[notation][rank] for rank in row ] +
-#                     [ vborder ]
-#                 )
-#                 for idx, row in enumerate(np.flip(self.matrix, axis=0))
-#             ] +
-#             [ hborder ] +
-#             [ (2 * ' ') + (2 * colsep) + colsep.join(Board.col_labels) ]
-#         )
+
 
     # def argwhere(self, rank: int) -> list:
     #     return np.argwhere(self.tensor[rank,:,:])
