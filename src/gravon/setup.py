@@ -3,7 +3,7 @@
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
 
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -89,6 +89,19 @@ def add_matched(df: pd.DataFrame) -> pd.DataFrame:
             matched_str = lambda r: r.apply(lambda x: x.setup_obj.matched_str(x.match_type), axis=1),
             matched_obj = lambda r: r.apply(lambda x: Setup(x.matched_str, x.type), axis=1)
         )
+    )
+
+Square = Tuple[int, int]
+
+def square_where(condition: np.array) -> Square:
+    return tuple((np.argwhere(condition))[0])
+
+def add_unique_piece(df: pd.DataFrame, rank: int) -> pd.DataFrame:
+    return (df.
+        assign(**{ 
+            f'square_{rank_labels[rank]}': lambda r: r.setup_obj.apply(lambda x: square_where(x.matrix[1:-1,1:-1] == rank)),
+            f'side_{rank_labels[rank]}'  : lambda r: r[f'square_{rank_labels[rank]}'].apply(lambda x: np.where(x[1] < (W // 2), 'left', 'right'))
+        })
     )
 
 class Theme:
