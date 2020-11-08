@@ -101,7 +101,7 @@ def setup_heatmap0(df: pd.DataFrame, format_string, axis_text):
         + p9.scale_x_discrete(drop=False)
         + p9.scale_fill_gradientn(colors=['#63BE7B', '#FFEB84', '#F8696B'], na_value='#CCCCCC', guide=False)
         + p9.theme(
-            axis_text =p9.element_blank() if not axis_text else None, 
+            axis_text =p9.element_blank() if not axis_text else p9.element_text(face='bold'), 
             axis_ticks=p9.element_blank(), 
             axis_title=p9.element_blank(), 
             panel_grid=p9.element_blank()
