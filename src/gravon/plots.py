@@ -10,6 +10,7 @@ import plotnine as p9
 
 from gravon.setup import row_labels, col_labels
 
+
 def tidy1(array: np.array, log10_scale, margins, margin_fill, normalize, rotate) -> pd.DataFrame:
     id_scale = lambda x: x
     fn_scale = np.log10 if log10_scale else id_scale
@@ -72,6 +73,7 @@ def tidy1(array: np.array, log10_scale, margins, margin_fill, normalize, rotate)
         })
     )
 
+
 def tidy2(df_numer: pd.DataFrame, df_denom: pd.DataFrame, log10_scale) -> pd.DataFrame:
     id_scale = lambda x: x
     fn_scale = np.log10 if log10_scale else id_scale
@@ -88,6 +90,7 @@ def tidy2(df_numer: pd.DataFrame, df_denom: pd.DataFrame, log10_scale) -> pd.Dat
         )
         .drop(columns=['value_numer', 'value_denom'])
     )
+
 
 def setup_heatmap0(df: pd.DataFrame, format_string, axis_text):
     # https://stackoverflow.com/a/62161556/819272
@@ -108,13 +111,16 @@ def setup_heatmap0(df: pd.DataFrame, format_string, axis_text):
         )
     )
 
+
 def setup_heatmap1(array: np.array, format_string=None, axis_text=True, log10_scale=True, margins=(0, 1), margin_fill=True, normalize=False, rotate=False):
     df = tidy1(array, log10_scale, margins, margin_fill, normalize, rotate)
     return setup_heatmap0(df, format_string, axis_text) 
+
 
 def setup_heatmap2(numer: np.array, denom: np.array, format_string=None, axis_text=True, log10_scale=True, margins=(0, 1), margin_fill=True, normalize=False, rotate=False):
     df_numer = tidy1(numer, log10_scale, margins, margin_fill, normalize, rotate)
     df_denom = tidy1(denom, log10_scale, margins, margin_fill, normalize, rotate)
     df = tidy2(df_numer, df_denom, log10_scale)
     return setup_heatmap0(df, format_string, axis_text)
+
  

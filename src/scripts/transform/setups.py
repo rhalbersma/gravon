@@ -11,11 +11,11 @@ import pandas as pd
 import gravon.package as pkg
 from gravon.piece import Rank
 from gravon.setup import Setup
-from gravon.stats import unique_square_where
 import gravon.strados2 as strados2
 
 import scripts.transform.games as games
 import scripts.transform.label as label
+
 
 def get_setups() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     try:
@@ -47,11 +47,7 @@ def get_setups() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame
                 result    = lambda r: np.where(r.player == r.winner, 'win', np.where(r.winner == 'draw', 'draw', 'loss')),
                 score     = lambda r: np.where(r.result == 'win', 1.0, np.where(r.result == 'draw', 0.5, 0.0)),
                 setup_str = lambda r: r.setup_str.apply(strados2.decode_setup),
-                setup_obj = lambda r: r.apply(lambda x: Setup(x.setup_str, x.type), axis=1),
-                marshal   = lambda r: r.setup_obj.apply(lambda x: unique_square_where(x.matrix[1:-1,1:-1] == Rank._X)),
-                general   = lambda r: r.setup_obj.apply(lambda x: unique_square_where(x.matrix[1:-1,1:-1] == Rank._9)),
-                spy       = lambda r: r.setup_obj.apply(lambda x: unique_square_where(x.matrix[1:-1,1:-1] == Rank._1)),
-                flag      = lambda r: r.setup_obj.apply(lambda x: unique_square_where(x.matrix[1:-1,1:-1] == Rank._F))
+                setup_obj = lambda r: r.apply(lambda x: Setup(x.setup_str, x.type), axis=1)
             )
             .astype(dtype={
                 'result': pd.CategoricalDtype(categories=['win', 'draw', 'loss'])
@@ -61,8 +57,7 @@ def get_setups() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame
                 'gid', 'filename', 'period', 'freq', 'ext', 'type', 'player', 
                 'result', 'win', 'draw', 'loss', 'score', 'ending', 
                 'num_moves', 'num_turns', 'next_move', 
-                'setup_str', 'setup_obj',
-                'marshal', 'general', 'spy', 'flag'
+                'setup_str', 'setup_obj'
             ]]
             .pipe(label.setups)
             .sort_values(['gid', 'player'])
@@ -75,9 +70,11 @@ def get_setups() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame
         pkg.save_dataset(null_setups, 'null_setups')
     return db_setups, game_setups, free_setups, null_setups
 
+
 def print_setup_summary():
     st2 = games.get_st2()
     _, game_setups, free_setups, null_setups = get_setups()
     print(pd.pivot_table(st2.merge(game_setups), index=['freq', 'ext', 'player_red', 'player_blue'], columns=['type'], aggfunc='size', fill_value=0, observed=True), '\n')
     print(pd.pivot_table(st2.merge(free_setups), index=['freq', 'ext', 'player_red', 'player_blue'], columns=['type'], aggfunc='size', fill_value=0, observed=True), '\n')
     print(pd.pivot_table(st2.merge(null_setups), index=['freq', 'ext', 'player_red', 'player_blue'], columns=['type'], aggfunc='size', fill_value=0, observed=True), '\n')
+

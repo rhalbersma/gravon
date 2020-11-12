@@ -17,6 +17,7 @@ import gravon.package as pkg
 GameHeader = Tuple[int, int, str, str, int, int, int, Optional[str]]
 GameBody   = pd.DataFrame
 
+
 def _gsn(gid: int, basename: str) -> Tuple[GameHeader, GameBody]:
     filename = os.path.join(pkg.txt_dir, basename)
     with open(filename, 'r', encoding='utf-8-sig') as src:
@@ -51,6 +52,7 @@ def _gsn(gid: int, basename: str) -> Tuple[GameHeader, GameBody]:
         )
 
     return (gid, type, player_red, player_blue, winner, ending, num_moves, field_content), game_body
+
 
 def _xml(gid: int, basename: str) -> Tuple[GameHeader, GameBody]:
     filename = os.path.join(pkg.txt_dir, basename)
@@ -94,6 +96,7 @@ def _xml(gid: int, basename: str) -> Tuple[GameHeader, GameBody]:
 
     return (gid, type, player_red, player_blue, winner, ending, num_moves, field_content), game_body
 
+
 def _concatter(index: Iterable[GameHeader], games: Iterable[GameBody]) -> Tuple[pd.DataFrame, pd.DataFrame]:
     return pd.DataFrame(
         data=index,
@@ -102,11 +105,13 @@ def _concatter(index: Iterable[GameHeader], games: Iterable[GameBody]) -> Tuple[
         ]
     ), pd.concat(games)
 
+
 def _selection(files: pd.DataFrame, parser: Callable[[int, str], Tuple[GameHeader, GameBody]]) -> Tuple[pd.DataFrame, pd.DataFrame]:
     return _concatter(*zip(*[
         parser(row.gid, row.filename)
         for row in tqdm(files.itertuples(), total=files.shape[0])
     ]))
+
 
 def txt_files(df: pd.DataFrame) -> pd.DataFrame:
     return (df
@@ -134,7 +139,7 @@ def txt_files(df: pd.DataFrame) -> pd.DataFrame:
             'classicfree'       : 2,
             'ultimate'          : 3,
             'ultimate lightning': 3,
-            'duell'             : 4
+            'duell'             : 4,
         }})
         .drop(columns=['splitext', 'root', 'splitroot'])
         .sort_values(['type', 'period', 'no'])
@@ -145,6 +150,7 @@ def txt_files(df: pd.DataFrame) -> pd.DataFrame:
             'gid', 'url', 'name', 'last_modified', 'modified', 'filename', 'prefix', 'period', 'freq', 'no', 'ext', 'type'
         ]]
     )
+
 
 def index_games(df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
     index, games = (
@@ -158,3 +164,4 @@ def index_games(df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
         ])
     )
     return index, games
+

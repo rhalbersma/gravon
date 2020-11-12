@@ -9,6 +9,7 @@ from typing import List
 
 import gravon.package as pkg
 
+
 def make_zip(filenames: List[str], base_dir: str) -> None:
     os.makedirs(pkg.archive_dir, exist_ok=True)
     base_name = os.path.join(pkg.archive_dir, base_dir)
@@ -19,3 +20,4 @@ def make_zip(filenames: List[str], base_dir: str) -> None:
             shutil.copy(src, base_name)
     shutil.make_archive(base_name, 'zip', base_name)
     shutil.rmtree(base_name)
+

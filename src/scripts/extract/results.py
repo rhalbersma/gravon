@@ -14,6 +14,7 @@ import gravon.package as pkg
 
 import scripts.extract.scrape as scrape
 
+
 def get_daily():
     try:
         last = dt.date(*map(int, sorted(os.listdir(pkg.daily_dir))[-1].split('.')[0].split('-')[1:]))
@@ -47,6 +48,7 @@ def get_daily():
         results = results.append(update, ignore_index=True)
         pkg.save_dataset(results, 'results')
     return results, update
+
 
 def remove_daily() -> bool:
     try:

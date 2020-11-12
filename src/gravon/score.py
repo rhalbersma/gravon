@@ -22,13 +22,16 @@ col_labels = [ chr(col + ord('a')) for col in range(W) ]
 
 Square = Tuple[int, int]
 
+
 def squares_where(condition: np.array) -> List[Square]:
     return list(map(tuple, np.transpose(np.where(condition))))
+
 
 def neighbors(sq: Square) -> Tuple[Square]:
     r, c = sq
     assert (1 <= r <= H) and (1 <= c <= W)
     return (r + 1, c), (r - 1, c), (r, c + 1), (r, c - 1)
+
 
 def neighbors_mat(m: np.array, sq: Square) -> Tuple:
     return tuple(
@@ -36,9 +39,11 @@ def neighbors_mat(m: np.array, sq: Square) -> Tuple:
         for nb in neighbors(sq)
     )
 
+
 lanes = np.array((3 * [ 'L' ] + 4 * [ 'M' ] + 3 * [ 'R' ]) * 4).reshape(H, W)
 lanes[0:2, :] = '_'
 lanes[3, 4:6] = '_'
+
 
 class Eval(Setup):
     def __init__(self, **kw):
@@ -206,6 +211,7 @@ class Eval(Setup):
         """
         starting_pieces = dict(zip(*np.unique(inner(self.rank)[inner(self.dtf) < 2], return_counts=True)))
         return sum(starting_pieces.values()), starting_pieces
+
 
 vdb = [
     """

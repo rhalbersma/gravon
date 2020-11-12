@@ -15,12 +15,14 @@ from tqdm import tqdm
 
 import gravon.package as pkg
 
+
 def _etiget(url: str, crawl_delay=0, headers={'User-agent': 'Custom'}, **kwargs) -> requests.Response:
     """
     Wrap requests.get() to conform to webscraping etiquette.
     """
     time.sleep(crawl_delay)
     return requests.get(url, headers=headers, **kwargs)
+
 
 def _list_directory_contents(url: str) -> pd.DataFrame:
     response = _etiget(url)
@@ -43,6 +45,7 @@ def _list_directory_contents(url: str) -> pd.DataFrame:
         ]]
     )
 
+
 def list_directory_contents_recursive(url: str) -> pd.DataFrame:
     isdir = 'name.str.endswith("/")'
     isfile = '~' + isdir
@@ -62,12 +65,14 @@ def list_directory_contents_recursive(url: str) -> pd.DataFrame:
         .reset_index(drop=True)
     )
 
+
 def _copy(source: str, directory: str) -> None:
     response = _etiget(source)
     assert response.status_code == 200
     assert os.path.exists(directory)
     with open(os.path.join(directory, os.path.basename(source)), 'wb') as dst:
         dst.write(response.content)
+
 
 def download(prefix: str, *urls: str) -> None:
     """
@@ -79,6 +84,7 @@ def download(prefix: str, *urls: str) -> None:
     os.makedirs(prefix, exist_ok=True)
     for url in urls:
         _copy(url, prefix)
+
 
 def mirror_no_directories(prefix: str, acclist: str, urls: pd.DataFrame) -> pd.DataFrame:
     """
@@ -92,6 +98,7 @@ def mirror_no_directories(prefix: str, acclist: str, urls: pd.DataFrame) -> pd.D
     for file in tqdm(files.itertuples(), total=files.shape[0]):
         _copy(os.path.join(file.url, file.name), prefix)
     return files
+
 
 def _table(url: str, selector: str) -> pd.DataFrame:
     response = _etiget(url)
@@ -111,6 +118,7 @@ def _daily_results(date: dt.date) -> pd.DataFrame:
         .assign(Date = date)
     )
 
+
 def results(start: dt.date, end: dt.date, dirname: str) -> List[str]:
     """
     Example:
@@ -126,6 +134,7 @@ def results(start: dt.date, end: dt.date, dirname: str) -> List[str]:
         _daily_results(date).to_csv(os.path.join(dirname, basename), index=False)
     return basenames
 
+
 def player_type(nick: str, type=0) -> pd.DataFrame:
     return (
         _table(
@@ -134,9 +143,10 @@ def player_type(nick: str, type=0) -> pd.DataFrame:
         )
         .assign(
             Nick = nick,
-            Type = type
+            Type = type,
         )
     )
+
 
 def player(nick: str) -> pd.DataFrame:
     return (pd
@@ -148,8 +158,10 @@ def player(nick: str) -> pd.DataFrame:
         .reset_index(reset=True)
     )
 
+
 def pvsp(nick1: str, nick2: str) -> pd.DataFrame:
     return _table(
         f'{pkg.stratego_url}/pvsp.jsp?nick1={nick1.lower()}&nick2={nick2.lower()}',
         'body > table:nth-child(1) > tbody > tr > td > table:nth-child(9)'
     )
+

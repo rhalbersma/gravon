@@ -11,6 +11,7 @@ import pandas as pd
 from tqdm import tqdm
 from typing import Optional
 
+
 def _gsn(dirname: str, basename: str) -> Tuple[Optional[str], Optional[int]]:
     path = osp.join(dirname, basename)
     with open(path, 'r', encoding='utf-8-sig') as file:
@@ -49,6 +50,7 @@ def _gsn(dirname: str, basename: str) -> Tuple[Optional[str], Optional[int]]:
     error_code = error3 * 4 + error2 * 2 + error1 * 1
     return basename, error_code
 
+
 def _xml(dirname: str, basename: str) -> Tuple[Optional[str], Optional[int]]:
     path = osp.join(dirname, basename)
     tree = lxml.etree.parse(path)
@@ -82,11 +84,13 @@ def _xml(dirname: str, basename: str) -> Tuple[Optional[str], Optional[int]]:
     error_code = error3 * 4 + error2 * 2 + error1 * 1
     return basename, error_code
 
+
 def _subset(dirname: str, txt_files: pd.DataFrame, repairer: Callable[[str, str], Tuple[str, int]]) -> List[Tuple[str, int]]:
     return [
         repairer(dirname, row.filename)
         for row in tqdm(txt_files.itertuples(), total=txt_files.shape[0])
     ]
+
 
 def directory(dirname: str, txt_files: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(
@@ -103,3 +107,4 @@ def directory(dirname: str, txt_files: pd.DataFrame) -> pd.DataFrame:
             'filename', 'error_code'
         ]
     )
+

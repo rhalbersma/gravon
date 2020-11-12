@@ -10,13 +10,16 @@ import pandas as pd
 
 from gravon.piece import Rank, rank_labels, rank_labels_US, rank_lookup, rank_counts
 
-def inner(padded):
-    return padded[1:-1, 1:-1]
 
 H, W = 4, 10
 
 row_labels = [ str(row +      1  ) for row in range(H) ]
 col_labels = [ chr(col + ord('a')) for col in range(W) ]
+
+
+def inner(padded):
+    return padded[1:-1, 1:-1]
+
 
 class Setup:
     matrix_init = np.full((H + 2, W + 2), Rank.lake, dtype='int8')
@@ -67,6 +70,7 @@ class Setup:
             }
         )
 
+
 def add_mirrored(df: pd.DataFrame) -> pd.DataFrame:
     return (df.
         assign(
@@ -74,6 +78,7 @@ def add_mirrored(df: pd.DataFrame) -> pd.DataFrame:
             mirrored_obj = lambda r: r.apply(lambda x: Setup(x.mirrored_str, x.type), axis=1)
         )
     )
+
 
 def add_standard(df: pd.DataFrame) -> pd.DataFrame:
     return (df.
@@ -83,6 +88,7 @@ def add_standard(df: pd.DataFrame) -> pd.DataFrame:
         )
     )
 
+
 def add_matched(df: pd.DataFrame) -> pd.DataFrame:
     return (df.
         assign(
@@ -91,10 +97,13 @@ def add_matched(df: pd.DataFrame) -> pd.DataFrame:
         )
     )
 
+
 Square = Tuple[int, int]
+
 
 def square_where(condition: np.array) -> Square:
     return tuple((np.argwhere(condition))[0])
+
 
 def add_unique_piece(df: pd.DataFrame, rank: int) -> pd.DataFrame:
     return (df.
@@ -103,6 +112,7 @@ def add_unique_piece(df: pd.DataFrame, rank: int) -> pd.DataFrame:
             f'side_{rank_labels[rank]}'  : lambda r: r[f'square_{rank_labels[rank]}'].apply(lambda x: np.where(x[1] < (W // 2), 'left', 'right'))
         })
     )
+
 
 class Theme:
     def __init__(self, rowsep='\n', colsep=' ', coordinates=True, frame=True, vborder='|', hborder='-', corner='+'):
@@ -114,8 +124,10 @@ class Theme:
         self.hborder = hborder
         self.corner = corner
 
+
 theme_classic = Theme()
 theme_minimal = Theme(colsep='', coordinates=False, frame=False)
+
 
 def diagram(setup_str: str, theme=theme_classic) -> str:
     matrix = np.array([c for c in setup_str]).reshape((H, W))
@@ -134,6 +146,7 @@ def diagram(setup_str: str, theme=theme_classic) -> str:
         [ hframe ] * theme.frame +
         [ (2 * ' ') + (2 * theme.colsep) + theme.colsep.join(col_labels) ] * theme.coordinates
     )
+
 
 # class Board:
 #     nrow, ncol = shape = (4, 10)

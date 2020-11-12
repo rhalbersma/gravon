@@ -15,11 +15,13 @@ import scripts.extract.scrape as scrape
 import scripts.extract.unpack as unpack
 import scripts.extract.repair as repair
 
+
 def get_player() -> bool:
     if not os.path.exists(pkg.games_dir) or 'strados2.jnlp' not in os.listdir(pkg.games_dir):
         scrape.download(pkg.games_dir, pkg.player_url)
         return True
     return False
+
 
 def get_zip_files() -> Tuple[pd.DataFrame, pd.DataFrame]:
     zip_files_remote = scrape.list_directory_contents_recursive(pkg.strados2_url)
@@ -42,6 +44,7 @@ def get_zip_files() -> Tuple[pd.DataFrame, pd.DataFrame]:
         pkg.save_dataset(zip_files, 'zip_files')
     assert sorted(os.listdir(pkg.zip_dir)) == sorted(zip_files.name)
     return zip_files, scraped
+
 
 def get_txt_files() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     zip_files, _ = get_zip_files()
@@ -69,11 +72,13 @@ def get_txt_files() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     repaired = repair.directory(pkg.txt_dir, unpacked)
     return txt_files, unpacked, repaired
 
+
 def get_all() -> pd.DataFrame:
     get_player()
     get_zip_files()
     *_, repaired = get_txt_files()
     return repaired
+
 
 def remove_player() -> bool:
     try:
@@ -81,6 +86,7 @@ def remove_player() -> bool:
         return True
     except:
         return False
+
 
 def remove_zip_files() -> bool:
     try:
@@ -90,6 +96,7 @@ def remove_zip_files() -> bool:
     except:
         return False
 
+
 def remove_txt_files() -> bool:
     try:
         shutil.rmtree(pkg.txt_dir, ignore_errors=True)
@@ -97,6 +104,7 @@ def remove_txt_files() -> bool:
         return True
     except:
         return False
+
 
 def remove_all() -> None:
     remove_player()

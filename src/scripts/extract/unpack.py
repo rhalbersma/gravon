@@ -10,6 +10,7 @@ import zipfile  as zf
 import pandas as pd
 from tqdm import tqdm
 
+
 def _infolist(dirname: str, basename: str) -> pd.DataFrame:
     return pd.DataFrame(
         data=[
@@ -21,6 +22,7 @@ def _infolist(dirname: str, basename: str) -> pd.DataFrame:
             'name', 'filename', 'modified'
         ]
     )
+
 
 def infolist(dirname: str, zip_files: pd.DataFrame) -> pd.DataFrame:
     return (zip_files
@@ -35,6 +37,7 @@ def infolist(dirname: str, zip_files: pd.DataFrame) -> pd.DataFrame:
         )
     )
 
+
 def _extract(dirname: str, basename: str, path: str) -> None:
     with zf.ZipFile(osp.join(dirname, basename)) as src:
         for mem in src.infolist():
@@ -42,6 +45,8 @@ def _extract(dirname: str, basename: str, path: str) -> None:
                 mem.filename = osp.basename(mem.filename)
                 src.extract(mem, path)
 
+
 def extract(dirname: str, zip_files: pd.DataFrame, path: str) -> None:
     for row in tqdm(zip_files.itertuples(), total=zip_files.shape[0]):
         _extract(dirname, row.name, path)
+

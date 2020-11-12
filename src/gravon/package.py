@@ -9,14 +9,18 @@ from typing import List
 
 import pandas as pd
 
+
 def _get_data_home() -> str:
     return pkg_resources.resource_filename(__name__, 'data')
+
 
 def _get_resource(path: str) -> str:
     return os.path.join(_get_data_home(), path)
 
+
 def _get_dataset(path: str) -> str:
     return _get_resource(''.join((path, '.pkl')))
+
 
 def get_dataset_names() -> List[str]:
     return [
@@ -25,14 +29,18 @@ def get_dataset_names() -> List[str]:
         if filename.endswith('.pkl')
     ]
 
+
 def load_dataset(name: str, **kws) -> pd.DataFrame:
     return pd.read_pickle(_get_dataset(name), **kws)
+
 
 def save_dataset(df: pd.DataFrame, name: str, **kws) -> None:
     pd.to_pickle(df, _get_dataset(name), **kws)
 
+
 def remove_dataset(name: str) -> None:
     os.remove(_get_dataset(name))
+
 
 gravon_url = 'http://www.gravon.de'
 player_url = f'{gravon_url}/webstart/strados2/strados2.jnlp'

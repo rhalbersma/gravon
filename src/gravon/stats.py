@@ -6,10 +6,12 @@
 import numpy as np
 import pandas as pd
 
+
 def setup_placement(df: pd.DataFrame, func=None, column='setup') -> np.array:
     # Tensors are stored as type np.int8 to save storage.
     # To avoid integer overflow, expand them to type int.
     return df[f'{column}_obj'].apply(lambda x: x.tensor.astype(int)).agg(func)
+
 
 league_table = {
     'Games' : ('result', 'count'),

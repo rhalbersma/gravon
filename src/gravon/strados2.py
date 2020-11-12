@@ -33,11 +33,13 @@ symbols = {
     'W': (Info.unknown, Color.blue,  Rank._9),
     'X': (Info.unknown, Color.blue,  Rank._X),
     'Y': (Info.unknown, Color.blue,  Rank._F),
-    '_': (Info.lake,    Color.lake,  Rank.lake)
+    '_': (Info.lake,    Color.lake,  Rank.lake),
 }
+
 
 def decode_setup(setup: str) -> str:
     return ''.join(
         rank_labels[symbols[piece][2]]
         for piece in setup
     )
+

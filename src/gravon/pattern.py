@@ -5,17 +5,20 @@
 
 import pandas as pd
 
+
 def pat1d_identity(pat2d: str) -> str:
     return ''.join([ 
         line.strip() 
         for line in pat2d.splitlines()[::-1] 
     ])
 
+
 def pat1d_mirrored(pat2d: str) -> str:
     return ''.join([ 
         line.strip()[::-1] 
         for line in pat2d.splitlines()[::-1] 
     ])
+
 
 def equal(df: pd.DataFrame, pat2d: str, column='setup_str', mirrored=True, by=['gid', 'player']) -> pd.DataFrame:
     return (pd
@@ -26,6 +29,7 @@ def equal(df: pd.DataFrame, pat2d: str, column='setup_str', mirrored=True, by=['
         .sort_values(by)
     )
 
+
 def match(df: pd.DataFrame, pat2d: str, column='setup_str', mirrored=True, by=['gid', 'player']) -> pd.DataFrame:
     return (pd
         .concat([
@@ -34,6 +38,7 @@ def match(df: pd.DataFrame, pat2d: str, column='setup_str', mirrored=True, by=['
         ])
         .sort_values(by)
     )
+
 
 any_setup = (
     """
