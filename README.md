@@ -26,6 +26,6 @@ This repository was inspired by a series of [forum](http://forum.stratego.com/to
 
 ## License
 
-Copyright Rein Halbersma 2018-2020.  
+Copyright Rein Halbersma 2018-2021.  
 Distributed under the [Boost Software License, Version 1.0](http://www.boost.org/users/license.html).  
 (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
